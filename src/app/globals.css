@@ -1,13 +1,8 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* alias our own theme vars to Bootstrap's, so overriding one source
+     (Bootstrap's [data-bs-theme]) drives both systems at once */
+  --background: var(--bs-body-bg);
+  --foreground: var(--bs-body-color);
 }
 
 html {
@@ -40,10 +35,4 @@ body {
 a {
   color: inherit;
   text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
 }
