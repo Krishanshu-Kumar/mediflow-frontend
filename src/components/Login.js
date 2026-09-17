@@ -9,6 +9,7 @@ const SLIDES = [
     title: "Manage Patients",
     text: "Keep every patient record organized and accessible in one place.",
     color: "#0d6efd",
+    image: "/login_pic_1.png",
   },
   {
     title: "Schedule Appointments",
@@ -26,6 +27,7 @@ export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,30 +48,44 @@ export default function Login() {
   };
 
   return (
-    <Container fluid style={{ minHeight: "100vh" }}>
-      <Row style={{ minHeight: "100vh" }}>
-        <Col md={6} className="d-none d-md-block p-0">
-          <Carousel variant="dark" controls={false} className="h-100" fade>
+    <Container fluid className="min-vh-100 d-flex flex-column py-2">
+      <Row className="flex-grow-1 g-1">
+        <Col md={7} className="d-none d-md-block">
+          <Carousel
+            variant="dark"
+            controls={false}
+            className="h-100 mf-carousel"
+            fade
+          >
             {SLIDES.map((slide) => (
               <Carousel.Item key={slide.title} className="h-100">
                 <div
-                  className="d-flex flex-column align-items-center justify-content-center text-center text-white px-4"
-                  style={{ height: "100vh", backgroundColor: slide.color }}
+                  className="position-relative d-flex flex-column align-items-center justify-content-center text-center text-white h-100 px-4 rounded overflow-hidden"
+                  style={{ backgroundColor: slide.color }}
                 >
-                  <h1 className="display-6 fw-bold mb-3">{slide.title}</h1>
-                  <p className="mb-0" style={{ maxWidth: "420px" }}>
-                    {slide.text}
-                  </p>
+                  {slide.image && (
+                    <img
+                      src={slide.image}
+                      alt={slide.title}
+                      className="position-absolute top-0 start-0 w-100 h-100"
+                      style={{ objectFit: "cover" }}
+                    />
+                  )}
+                  {!slide.image && (
+                    <div className="position-relative">
+                      <h1 className="display-6 fw-bold mb-3">{slide.title}</h1>
+                      <p className="mb-0" style={{ maxWidth: "420px" }}>
+                        {slide.text}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </Carousel.Item>
             ))}
           </Carousel>
         </Col>
 
-        <Col
-          md={6}
-          className="d-flex align-items-center justify-content-center p-4"
-        >
+        <Col md={5} className="d-flex align-items-center justify-content-center">
           <div style={{ width: "100%", maxWidth: "430px" }}>
             <div className="text-center mb-4">
               <h1 className="display-5 fw-bold mb-2">Welcome Back</h1>
@@ -92,6 +108,7 @@ export default function Login() {
                     value={formData.email}
                     onChange={handleChange}
                     required
+                    autoComplete="off"
                     className="mf-field-input"
                   />
                   <label htmlFor="login-email" className="mf-field-label">
@@ -113,6 +130,7 @@ export default function Login() {
                     value={formData.password}
                     onChange={handleChange}
                     required
+                    autoComplete="new-password"
                     className="mf-field-input"
                   />
                   <label htmlFor="login-password" className="mf-field-label">
@@ -129,7 +147,18 @@ export default function Login() {
                 </button>
               </div>
 
-              <div className="text-end mb-3">
+              <div
+                className="d-flex align-items-center justify-content-between mb-3"
+                style={{ paddingLeft: "0.35rem", paddingRight: "0.5rem" }}
+              >
+                <Form.Check
+                  type="checkbox"
+                  id="remember-me"
+                  label="Remember me"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="mf-checkbox small"
+                />
                 <a href="#" className="text-decoration-none small">
                   Forgot Password?
                 </a>
@@ -143,6 +172,13 @@ export default function Login() {
               >
                 Login
               </Button>
+
+              <p className="text-center text-muted mt-4 mb-0">
+                Don&apos;t have an account?{" "}
+                <a href="#" className="text-decoration-none fw-semibold">
+                  Sign up
+                </a>
+              </p>
             </Form>
           </div>
         </Col>
