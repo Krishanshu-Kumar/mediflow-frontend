@@ -1,8 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import { Button, Carousel, Col, Container, Form, Row } from "react-bootstrap";
-import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
+import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle } from "react-icons/fi";
+
+const loginSchema = Yup.object({
+  email: Yup.string()
+    .email("Enter a valid email address!")
+    .required("Email is required!"),
+  password: Yup.string().required("Password is required!"),
+});
 
 const SLIDES = [
   {
@@ -15,6 +24,7 @@ const SLIDES = [
     title: "Schedule Appointments",
     text: "Book, reschedule, and track appointments without the back-and-forth.",
     color: "#198754",
+    image: "/login_pic_2.png",
   },
   {
     title: "Secure Records",
@@ -24,27 +34,31 @@ const SLIDES = [
 ];
 
 export default function Login() {
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [focusedField, setFocusedField] = useState(null);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const formik = useFormik({
+    initialValues: { email: "", password: "" },
+    validationSchema: loginSchema,
+    onSubmit: (values) => {
+      // TODO: wire up to the auth API once available.
+      console.log("Login submitted:", values);
+    },
+    validateOnBlur: true,
+    validateOnChange: true,
+  });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError("");
+  const showFieldError = (field) =>
+    focusedField !== field &&
+    (formik.touched[field] || formik.submitCount > 0) &&
+    formik.errors[field];
 
-    if (!formData.email || !formData.password) {
-      setError("Please enter both email and password.");
-      return;
-    }
+  const handleFieldFocus = (field) => setFocusedField(field);
 
-    // TODO: wire up to the auth API once available.
-    console.log("Login submitted:", formData);
+  const handleFieldBlur = (e) => {
+    setFocusedField(null);
+    formik.handleBlur(e);
   };
 
   return (
@@ -92,59 +106,101 @@ export default function Login() {
               <p className="text-muted mb-0">Sign in to continue to MediFlow</p>
             </div>
 
-            {error && <div className="alert alert-danger py-2">{error}</div>}
-
-            <Form onSubmit={handleSubmit}>
-              <div className="mf-field mb-3">
-                <span className="mf-field-icon">
-                  <FiMail size={20} />
-                </span>
-                <div className="mf-field-body">
-                  <input
-                    id="login-email"
-                    type="email"
-                    name="email"
-                    placeholder=" "
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    autoComplete="off"
-                    className="mf-field-input"
-                  />
-                  <label htmlFor="login-email" className="mf-field-label">
-                    Email
-                  </label>
+            <Form onSubmit={formik.handleSubmit}>
+              <div className="mf-field-group mb-3">
+                <div
+                  className={`mf-field${
+                    showFieldError("email") ? " is-invalid" : ""
+                  }`}
+                >
+                  <span className="mf-field-icon">
+                    <FiMail size={17} />
+                  </span>
+                  <div className="mf-field-body">
+                    <input
+                      id="login-email"
+                      type="email"
+                      name="email"
+                      placeholder=" "
+                      value={formik.values.email}
+                      onChange={formik.handleChange}
+                      onFocus={() => handleFieldFocus("email")}
+                      onBlur={handleFieldBlur}
+                      autoComplete="new-password"
+                      spellCheck="false"
+                      className="mf-field-input"
+                    />
+                    <label htmlFor="login-email" className="mf-field-label">
+                      Email
+                    </label>
+                  </div>
+                  {showFieldError("email") && (
+                    <span className="mf-field-alert">
+                      <FiAlertCircle size={19} />
+                    </span>
+                  )}
+                </div>
+                <div
+                  className={`mf-field-error${
+                    showFieldError("email") ? " is-visible" : ""
+                  }`}
+                >
+                  <div>
+                    <span>{formik.errors.email}</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="mf-field mb-4">
-                <span className="mf-field-icon">
-                  <FiLock size={20} />
-                </span>
-                <div className="mf-field-body">
-                  <input
-                    id="login-password"
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder=" "
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    autoComplete="new-password"
-                    className="mf-field-input"
-                  />
-                  <label htmlFor="login-password" className="mf-field-label">
-                    Password
-                  </label>
-                </div>
-                <button
-                  type="button"
-                  className="mf-field-toggle"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+              <div className="mf-field-group mb-4">
+                <div
+                  className={`mf-field${
+                    showFieldError("password") ? " is-invalid" : ""
+                  }`}
                 >
-                  {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
-                </button>
+                  <span className="mf-field-icon">
+                    <FiLock size={17} />
+                  </span>
+                  <div className="mf-field-body">
+                    <input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      placeholder=" "
+                      value={formik.values.password}
+                      onChange={formik.handleChange}
+                      onFocus={() => handleFieldFocus("password")}
+                      onBlur={handleFieldBlur}
+                      autoComplete="new-password"
+                      className="mf-field-input"
+                    />
+                    <label htmlFor="login-password" className="mf-field-label">
+                      Password
+                    </label>
+                  </div>
+                  {showFieldError("password") ? (
+                    <span className="mf-field-alert">
+                      <FiAlertCircle size={19} />
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="mf-field-toggle"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <FiEyeOff size={17} /> : <FiEye size={17} />}
+                    </button>
+                  )}
+                </div>
+                <div
+                  className={`mf-field-error${
+                    showFieldError("password") ? " is-visible" : ""
+                  }`}
+                >
+                  <div>
+                    <span>{formik.errors.password}</span>
+                  </div>
+                </div>
               </div>
 
               <div

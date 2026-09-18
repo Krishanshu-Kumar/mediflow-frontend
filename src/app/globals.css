@@ -28,19 +28,65 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-body::before {
+body::before,
+body::after {
   content: "";
   position: fixed;
-  inset: 0;
+  inset: -10%;
   z-index: -1;
   pointer-events: none;
+}
+
+body::before {
   background:
-    radial-gradient(900px circle at 15% 20%, rgba(95, 200, 160, 0.55), transparent 70%),
-    radial-gradient(800px circle at 85% 15%, rgba(160, 230, 200, 0.55), transparent 70%),
-    radial-gradient(850px circle at 50% 55%, rgba(120, 210, 175, 0.35), transparent 70%),
-    radial-gradient(900px circle at 25% 90%, rgba(60, 170, 130, 0.45), transparent 70%),
-    radial-gradient(800px circle at 82% 88%, rgba(40, 140, 100, 0.4), transparent 70%);
-  filter: blur(45px);
+    radial-gradient(1100px circle at 10% 15%, rgba(95, 200, 160, 0.7), transparent 65%),
+    radial-gradient(950px circle at 55% 50%, rgba(120, 210, 175, 0.12), transparent 70%),
+    radial-gradient(1050px circle at 20% 95%, rgba(60, 170, 130, 0.65), transparent 60%),
+    radial-gradient(600px circle at 38% 70%, rgba(70, 180, 140, 0.15), transparent 68%);
+  filter: blur(55px);
+  animation: mf-blob-drift-a 26s ease-in-out infinite alternate;
+}
+
+body::after {
+  background:
+    radial-gradient(650px circle at 90% 10%, rgba(160, 230, 200, 0.18), transparent 75%),
+    radial-gradient(700px circle at 88% 92%, rgba(40, 140, 100, 0.6), transparent 75%),
+    radial-gradient(500px circle at 68% 30%, rgba(150, 225, 195, 0.15), transparent 70%),
+    radial-gradient(450px circle at 95% 55%, rgba(180, 235, 210, 0.55), transparent 72%),
+    radial-gradient(550px circle at 78% 48%, rgba(100, 195, 165, 0.35), transparent 70%);
+  filter: blur(35px);
+  animation: mf-blob-drift-b 32s ease-in-out infinite alternate;
+}
+
+@keyframes mf-blob-drift-a {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-2%, 2%, 0) scale(1.05);
+  }
+  100% {
+    transform: translate3d(2%, -1%, 0) scale(1);
+  }
+}
+
+@keyframes mf-blob-drift-b {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(2%, -2%, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-2%, 1%, 0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none;
+  }
 }
 
 * {
@@ -58,38 +104,94 @@ a {
   position: relative;
   display: flex;
   align-items: center;
-  height: 68px;
-  border: 1px solid var(--bs-border-color);
+  height: 58px;
+  border: 1px solid rgba(var(--bs-body-color-rgb), 0.16);
   border-radius: 999px;
-  background: var(--bs-body-bg);
+  background: linear-gradient(
+    180deg,
+    rgba(var(--bs-body-bg-rgb), 0.95),
+    rgba(var(--bs-body-bg-rgb), 0.7)
+  );
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 4px 14px rgba(0, 0, 0, 0.08);
   padding-left: 0.35rem;
   padding-right: 0.5rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease,
-    background-color 0.2s ease;
+    background-color 0.2s ease, transform 0.2s ease;
+}
+
+.mf-field:hover {
+  border-color: rgba(var(--bs-body-color-rgb), 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 6px 18px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
 
 .mf-field:focus-within {
-  border-color: var(--bs-body-color);
-  box-shadow: 0 0 0 1.5px var(--bs-body-color);
-  background-color: var(--bs-secondary-bg);
+  border-color: #000;
+  box-shadow: 0 0 0 1px #000,
+    0 0 0 5px rgba(0, 0, 0, 0.13),
+    0 4px 14px rgba(0, 0, 0, 0.1);
+  background-color: rgba(var(--bs-body-bg-rgb), 0.95);
+  transform: translateY(-1px);
+}
+
+.mf-field.is-invalid {
+  border-color: var(--bs-danger);
+  box-shadow: 0 0 0 1px var(--bs-danger),
+    0 0 0 5px rgba(var(--bs-danger-rgb), 0.13);
+}
+
+.mf-field.is-invalid:focus-within {
+  border-color: var(--bs-danger);
+  box-shadow: 0 0 0 1px var(--bs-danger),
+    0 0 0 5px rgba(var(--bs-danger-rgb), 0.13);
+}
+
+.mf-field-alert {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bs-danger);
+  flex-shrink: 0;
+  margin-right: 0.35rem;
+  transform: translateX(-6px);
 }
 
 .mf-field-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  background: var(--bs-secondary-bg);
-  color: var(--bs-secondary-color);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.1),
+    rgba(0, 0, 0, 0.04)
+  );
+  color: #000;
   margin-right: 0.75rem;
   flex-shrink: 0;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .mf-field:focus-within .mf-field-icon {
-  background: var(--bs-body-color);
+  background: #000;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.mf-field.is-invalid .mf-field-icon {
+  background: rgba(var(--bs-danger-rgb), 0.15);
+  color: var(--bs-danger);
+}
+
+.mf-field.is-invalid:focus-within .mf-field-icon {
+  background: var(--bs-danger);
   color: var(--bs-body-bg);
 }
 
@@ -110,6 +212,7 @@ a {
   box-shadow: none;
   background: transparent;
   font-size: 1rem;
+  font-weight: 500;
   padding: 0 0.85rem 0 0;
   color: var(--bs-body-color);
 }
@@ -129,10 +232,15 @@ a {
   top: 50%;
   transform: translateY(-50%);
   font-size: 1rem;
+  font-weight: 500;
   color: var(--bs-secondary-color);
   pointer-events: none;
   transition: top 0.15s ease-in-out, transform 0.15s ease-in-out,
-    font-size 0.15s ease-in-out;
+    font-size 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.mf-field-input:focus ~ .mf-field-label {
+  color: #000;
 }
 
 .mf-field-input:focus ~ .mf-field-label,
@@ -140,6 +248,27 @@ a {
   top: 0.25rem;
   transform: translateY(0);
   font-size: 0.75rem;
+}
+
+.mf-field-error {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.2s ease;
+}
+
+.mf-field-error.is-visible {
+  grid-template-rows: 1fr;
+}
+
+.mf-field-error > div {
+  overflow: hidden;
+}
+
+.mf-field-error span {
+  display: block;
+  padding: 0.3rem 0.85rem 0;
+  font-size: 0.8rem;
+  color: var(--bs-danger);
 }
 
 .mf-field-toggle {
@@ -198,7 +327,7 @@ a {
   border: 1px solid var(--bs-border-color);
   border-radius: 2.5rem;
   overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
 }
 
 .mf-carousel .carousel-indicators [data-bs-target] {
