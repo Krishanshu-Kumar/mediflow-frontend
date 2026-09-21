@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Button, Carousel, Col, Container, Form, Row } from "react-bootstrap";
@@ -24,16 +25,18 @@ const SLIDES = [
     title: "Schedule Appointments",
     text: "Book, reschedule, and track appointments without the back-and-forth.",
     color: "#198754",
-    image: "/login_pic_2.png",
+    image: "/login_img2.png",
   },
   {
     title: "Secure Records",
     text: "Your data is protected with industry-standard security practices.",
     color: "#6610f2",
+    image: "/login_img3.png",
   },
 ];
 
 export default function Login() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
@@ -44,6 +47,7 @@ export default function Login() {
     onSubmit: (values) => {
       // TODO: wire up to the auth API once available.
       console.log("Login submitted:", values);
+      router.push("/admin/dashboard");
     },
     validateOnBlur: true,
     validateOnChange: true,
@@ -62,7 +66,7 @@ export default function Login() {
   };
 
   return (
-    <Container fluid className="min-vh-100 d-flex flex-column py-2">
+    <Container fluid className="min-vh-100 d-flex flex-column py-2 mf-login-bg">
       <Row className="flex-grow-1 g-1">
         <Col md={7} className="d-none d-md-block">
           <Carousel
