@@ -9,13 +9,26 @@ import {
   FiBriefcase,
   FiTarget,
   FiCheckSquare,
+  FiActivity,
+  FiMail,
+  FiSearch,
+  FiBarChart2,
 } from "react-icons/fi";
 import { FaInstagram, FaTwitter, FaFacebookF, FaLinkedinIn } from "react-icons/fa";
 
 const NAV_SECTIONS = [
   { key: "executive", label: "Executive Overview", icon: FiTrendingUp },
   { key: "legal", label: "Legal Operations", icon: FiBriefcase },
-  { key: "marketing", label: "Marketing", icon: FiTarget },
+  {
+    key: "marketing",
+    label: "Marketing",
+    icon: FiTarget,
+    children: [
+      { key: "campaigns", label: "Campaigns", icon: FiMail, color: "#f59e0b" },
+      { key: "seo", label: "SEO", icon: FiSearch, color: "#10b981" },
+      { key: "analytics", label: "Analytics", icon: FiBarChart2, color: "#6366f1" },
+    ],
+  },
   { key: "productivity", label: "Productivity", icon: FiCheckSquare },
   {
     key: "social",
@@ -33,57 +46,35 @@ const NAV_SECTIONS = [
 export default function Sidebar() {
   const [openSection, setOpenSection] = useState("social");
   const [expanded, setExpanded] = useState(true);
+  const [activeChild, setActiveChild] = useState(null);
 
-  const selectSection = (key) => {
-    setOpenSection(key);
+  const selectSection = (key, hasChildren) => {
+    if (hasChildren) {
+      setOpenSection((prev) => (prev === key ? null : key));
+    } else {
+      setOpenSection(key);
+    }
     setExpanded(true);
   };
 
-  if (!expanded) {
-    return (
-      <div className="mf-sidebar mf-sidebar-collapsed">
-        <div className="mf-sidebar-header mf-sidebar-header-stacked">
-          <span className="mf-sidebar-logo-mark" aria-hidden="true">
-            *
-          </span>
+  return (
+    <div
+      className={`mf-sidebar${
+        expanded ? " mf-sidebar-expanded" : " mf-sidebar-collapsed"
+      }`}
+    >
+      <div className="mf-sidebar-panel">
+        <div className="mf-sidebar-header">
           <button
             type="button"
-            className="mf-sidebar-toggle-btn"
+            className="mf-sidebar-logo-mark"
             onClick={() => setExpanded(true)}
             aria-label="Expand sidebar"
             title="Expand"
           >
-            <FiChevronLeft size={16} className="mf-sidebar-toggle-icon is-collapsed" />
+            <FiActivity size={20} />
           </button>
-        </div>
-        <div className="mf-sidebar-rail-icons">
-          {NAV_SECTIONS.map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              type="button"
-              className={`mf-sidebar-rail-btn${
-                openSection === key ? " is-active" : ""
-              }`}
-              onClick={() => selectSection(key)}
-              aria-label={label}
-              title={label}
-            >
-              <Icon size={18} />
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mf-sidebar mf-sidebar-expanded">
-      <div className="mf-sidebar-panel">
-        <div className="mf-sidebar-header">
-          <span className="mf-sidebar-logo-mark" aria-hidden="true">
-            *
-          </span>
-          <span className="mf-sidebar-title">Dashboard</span>
+          <span className="mf-sidebar-title mf-sidebar-fade">MediFlow</span>
           <button
             type="button"
             className="mf-sidebar-toggle-btn"
@@ -106,28 +97,57 @@ export default function Sidebar() {
                 <button
                   type="button"
                   className={`mf-sidebar-section-btn${isOpen ? " is-open" : ""}`}
-                  onClick={() => setOpenSection(section.key)}
+                  onClick={() => selectSection(section.key, hasChildren)}
+                  aria-label={section.label}
+                  title={section.label}
                 >
                   <span className="mf-sidebar-section-label">
-                    <SectionIcon size={16} />
-                    {section.label}
+                    <SectionIcon size={19} className="mf-sidebar-section-icon" />
+                    <span className="mf-sidebar-fade">{section.label}</span>
                   </span>
                   {hasChildren && (
                     <FiChevronDown
-                      size={15}
-                      className={`mf-sidebar-chevron${isOpen ? " is-open" : ""}`}
+                      size={17}
+                      className={`mf-sidebar-chevron mf-sidebar-fade${
+                        isOpen ? " is-open" : ""
+                      }`}
                     />
                   )}
                 </button>
 
-                {hasChildren && isOpen && (
-                  <div className="mf-sidebar-children">
-                    {section.children.map(({ key, label, icon: Icon, color }) => (
-                      <button key={key} type="button" className="mf-sidebar-child-btn">
-                        <Icon size={15} style={{ color }} />
-                        <span>{label}</span>
-                      </button>
-                    ))}
+                {hasChildren && (
+                  <div
+                    className={`mf-sidebar-children${
+                      isOpen && expanded ? " is-open" : ""
+                    }`}
+                  >
+                    <div className="mf-sidebar-children-inner">
+                      {section.children.map(({ key, label, icon: Icon, color }) => {
+                        const isChildActive = activeChild === key;
+                        return (
+                          <div key={key} className="mf-sidebar-tree-item">
+                            <button
+                              type="button"
+                              className={`mf-sidebar-child-btn${
+                                isChildActive ? " is-active" : ""
+                              }`}
+                              style={
+                                isChildActive
+                                  ? {
+                                      backgroundColor: `${color}17`,
+                                      boxShadow: `inset 3px 0 0 0 ${color}`,
+                                    }
+                                  : undefined
+                              }
+                              onClick={() => setActiveChild(key)}
+                            >
+                              <Icon size={17} style={{ color }} />
+                              <span>{label}</span>
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
