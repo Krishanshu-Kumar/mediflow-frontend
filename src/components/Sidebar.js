@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   FiShare2,
   FiChevronLeft,
@@ -9,10 +11,11 @@ import {
   FiBriefcase,
   FiTarget,
   FiCheckSquare,
-  FiActivity,
   FiMail,
   FiSearch,
   FiBarChart2,
+  FiChevronUp,
+  FiLogOut,
 } from "react-icons/fi";
 import { FaInstagram, FaTwitter, FaFacebookF, FaLinkedinIn } from "react-icons/fa";
 
@@ -43,10 +46,63 @@ const NAV_SECTIONS = [
   },
 ];
 
+// TODO: replace with the signed-in user once the auth API is available.
+const CURRENT_USER = { name: "Admin User", email: "admin@mediflow.com" };
+
+const getInitials = (name) =>
+  name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
 export default function Sidebar() {
+  const router = useRouter();
   const [openSection, setOpenSection] = useState("social");
   const [expanded, setExpanded] = useState(true);
   const [activeChild, setActiveChild] = useState(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef(null);
+
+  useEffect(() => {
+    if (!profileOpen) return;
+
+    const handlePointerDown = (event) => {
+      if (!profileRef.current?.contains(event.target)) setProfileOpen(false);
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") setProfileOpen(false);
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [profileOpen]);
+
+  const collapse = () => {
+    setProfileOpen(false);
+    setExpanded(false);
+  };
+
+  const toggleProfile = () => {
+    // The menu needs the full sidebar width, so expand first if collapsed.
+    if (!expanded) {
+      setExpanded(true);
+      setProfileOpen(true);
+      return;
+    }
+    setProfileOpen((prev) => !prev);
+  };
+
+  const signOut = () => {
+    // TODO: clear the session via the auth API once available.
+    setProfileOpen(false);
+    router.push("/");
+  };
 
   const selectSection = (key, hasChildren) => {
     if (hasChildren) {
@@ -72,13 +128,13 @@ export default function Sidebar() {
             aria-label="Expand sidebar"
             title="Expand"
           >
-            <FiActivity size={20} />
+            <Image src="/mediflow-logo.png" alt="MediFlow" width={40} height={40} priority />
           </button>
           <span className="mf-sidebar-title mf-sidebar-fade">MediFlow</span>
           <button
             type="button"
             className="mf-sidebar-toggle-btn"
-            onClick={() => setExpanded(false)}
+            onClick={collapse}
             aria-label="Collapse sidebar"
             title="Collapse"
           >
@@ -154,6 +210,47 @@ export default function Sidebar() {
             );
           })}
         </nav>
+
+        <div className="mf-sidebar-profile" ref={profileRef}>
+          <div
+            className={`mf-sidebar-profile-menu${profileOpen ? " is-open" : ""}`}
+            role="menu"
+            aria-hidden={!profileOpen}
+          >
+            <button
+              type="button"
+              className="mf-sidebar-profile-menu-item is-danger"
+              role="menuitem"
+              tabIndex={profileOpen ? 0 : -1}
+              onClick={signOut}
+            >
+              <FiLogOut size={16} />
+              <span>Sign out</span>
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className={`mf-sidebar-profile-btn${profileOpen ? " is-open" : ""}`}
+            onClick={toggleProfile}
+            aria-haspopup="menu"
+            aria-expanded={profileOpen}
+            aria-label={`${CURRENT_USER.name} account menu`}
+            title={CURRENT_USER.name}
+          >
+            <span className="mf-sidebar-avatar">{getInitials(CURRENT_USER.name)}</span>
+            <span className="mf-sidebar-profile-info mf-sidebar-fade">
+              <span className="mf-sidebar-profile-name">{CURRENT_USER.name}</span>
+              <span className="mf-sidebar-profile-email">{CURRENT_USER.email}</span>
+            </span>
+            <FiChevronUp
+              size={16}
+              className={`mf-sidebar-chevron mf-sidebar-fade${
+                profileOpen ? " is-open" : ""
+              }`}
+            />
+          </button>
+        </div>
       </div>
     </div>
   );

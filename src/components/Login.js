@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -106,7 +107,15 @@ export default function Login() {
         <Col md={5} className="d-flex align-items-center justify-content-center">
           <div style={{ width: "100%", maxWidth: "430px" }}>
             <div className="text-center mb-4">
-              <h1 className="display-5 fw-bold mb-2">Welcome Back</h1>
+              <Image
+                src="/mediflow-wordmark.png"
+                alt="MediFlow"
+                width={903}
+                height={196}
+                priority
+                className="mf-login-logo"
+              />
+              <h1 className="display-6 fw-bold mb-2">Welcome Back</h1>
               <p className="text-muted mb-0">Sign in to continue to MediFlow</p>
             </div>
 
