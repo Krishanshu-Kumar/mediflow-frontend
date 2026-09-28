@@ -4,47 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
-  FiShare2,
   FiChevronLeft,
   FiChevronDown,
-  FiTrendingUp,
-  FiBriefcase,
-  FiTarget,
-  FiCheckSquare,
-  FiMail,
-  FiSearch,
-  FiBarChart2,
   FiChevronUp,
   FiLogOut,
+  FiSearch,
+  FiX,
 } from "react-icons/fi";
-import { FaInstagram, FaTwitter, FaFacebookF, FaLinkedinIn } from "react-icons/fa";
-
-const NAV_SECTIONS = [
-  { key: "executive", label: "Executive Overview", icon: FiTrendingUp },
-  { key: "legal", label: "Legal Operations", icon: FiBriefcase },
-  {
-    key: "marketing",
-    label: "Marketing",
-    icon: FiTarget,
-    children: [
-      { key: "campaigns", label: "Campaigns", icon: FiMail, color: "#f59e0b" },
-      { key: "seo", label: "SEO", icon: FiSearch, color: "#10b981" },
-      { key: "analytics", label: "Analytics", icon: FiBarChart2, color: "#6366f1" },
-    ],
-  },
-  { key: "productivity", label: "Productivity", icon: FiCheckSquare },
-  {
-    key: "social",
-    label: "Social Media",
-    icon: FiShare2,
-    children: [
-      { key: "instagram", label: "Instagram", icon: FaInstagram, color: "#e1306c" },
-      { key: "twitter", label: "Twitter", icon: FaTwitter, color: "#1da1f2" },
-      { key: "facebook", label: "Facebook", icon: FaFacebookF, color: "#1877f2" },
-      { key: "linkedin", label: "LinkedIn", icon: FaLinkedinIn, color: "#0a66c2" },
-    ],
-  },
-];
+import { NAV_SECTIONS, DEFAULT_SECTION } from "@/const/navigation";
 
 // TODO: replace with the signed-in user once the auth API is available.
 const CURRENT_USER = { name: "Admin User", email: "admin@mediflow.com" };
@@ -57,13 +24,31 @@ const getInitials = (name) =>
     .slice(0, 2)
     .toUpperCase();
 
-export default function Sidebar() {
+// A menu matching the query keeps all its sub menus; otherwise only matching sub menus stay.
+const filterSections = (query) => {
+  const term = query.trim().toLowerCase();
+  if (!term) return NAV_SECTIONS;
+  const matches = (label) => label.toLowerCase().includes(term);
+
+  return NAV_SECTIONS.flatMap((section) => {
+    if (matches(section.label)) return [section];
+    const children = section.children?.filter((child) => matches(child.label));
+    return children?.length ? [{ ...section, children }] : [];
+  });
+};
+
+export default function Sidebar({ onNavigate }) {
   const router = useRouter();
-  const [openSection, setOpenSection] = useState("social");
+  const [openSection, setOpenSection] = useState(DEFAULT_SECTION);
   const [expanded, setExpanded] = useState(true);
   const [activeChild, setActiveChild] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef(null);
+
+  const isSearching = searchQuery.trim() !== "";
+  const visibleSections = filterSections(searchQuery);
 
   useEffect(() => {
     if (!profileOpen) return;
@@ -111,6 +96,19 @@ export default function Sidebar() {
       setOpenSection(key);
     }
     setExpanded(true);
+    // Keep the active sub menu in the breadcrumb only if it belongs to this menu.
+    const section = NAV_SECTIONS.find((item) => item.key === key);
+    const keepChild = section.children?.some((child) => child.key === activeChild);
+    onNavigate?.(key, keepChild ? activeChild : null);
+  };
+
+  const handleSearchKeyDown = (event) => {
+    if (event.key === "Escape") setSearchQuery("");
+  };
+
+  const selectChild = (sectionKey, childKey) => {
+    setActiveChild(childKey);
+    onNavigate?.(sectionKey, childKey);
   };
 
   return (
@@ -142,10 +140,47 @@ export default function Sidebar() {
           </button>
         </div>
 
+        <div className="mf-sidebar-divider" role="separator" />
+
+        <div
+          className="mf-sidebar-search"
+          onClick={() => searchInputRef.current?.focus()}
+          title={expanded ? undefined : "Search menu"}
+        >
+          <FiSearch size={16} className="mf-sidebar-search-icon" />
+          <input
+            ref={searchInputRef}
+            type="search"
+            className="mf-sidebar-search-input"
+            placeholder="Search menu..."
+            aria-label="Search menu"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            onFocus={() => setExpanded(true)}
+            onKeyDown={handleSearchKeyDown}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="mf-sidebar-search-clear"
+              onClick={() => setSearchQuery("")}
+              aria-label="Clear search"
+              title="Clear"
+            >
+              <FiX size={14} />
+            </button>
+          )}
+        </div>
+
         <nav className="mf-sidebar-nav">
-          {NAV_SECTIONS.map((section) => {
+          {visibleSections.length === 0 && (
+            <p className="mf-sidebar-search-empty mf-sidebar-fade">No menu matches</p>
+          )}
+          {visibleSections.map((section) => {
             const isOpen = openSection === section.key;
             const hasChildren = Boolean(section.children);
+            // While searching, show every sub menu list so matches are visible.
+            const showChildren = hasChildren && (isSearching || isOpen);
             const SectionIcon = section.icon;
 
             return (
@@ -165,7 +200,7 @@ export default function Sidebar() {
                     <FiChevronDown
                       size={17}
                       className={`mf-sidebar-chevron mf-sidebar-fade${
-                        isOpen ? " is-open" : ""
+                        showChildren ? " is-open" : ""
                       }`}
                     />
                   )}
@@ -174,7 +209,7 @@ export default function Sidebar() {
                 {hasChildren && (
                   <div
                     className={`mf-sidebar-children${
-                      isOpen && expanded ? " is-open" : ""
+                      showChildren && expanded ? " is-open" : ""
                     }`}
                   >
                     <div className="mf-sidebar-children-inner">
@@ -195,7 +230,7 @@ export default function Sidebar() {
                                     }
                                   : undefined
                               }
-                              onClick={() => setActiveChild(key)}
+                              onClick={() => selectChild(section.key, key)}
                             >
                               <Icon size={17} style={{ color }} />
                               <span>{label}</span>

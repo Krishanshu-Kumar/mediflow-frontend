@@ -75,6 +75,8 @@ export default function Login() {
             controls={false}
             className="h-100 mf-carousel"
             fade
+            interval={4000}
+            pause={false}
           >
             {SLIDES.map((slide) => (
               <Carousel.Item key={slide.title} className="h-100">
@@ -105,7 +107,7 @@ export default function Login() {
         </Col>
 
         <Col md={5} className="d-flex align-items-center justify-content-center">
-          <div style={{ width: "100%", maxWidth: "430px" }}>
+          <div className="mf-login-form" style={{ width: "100%", maxWidth: "430px" }}>
             <div className="text-center mb-4">
               <Image
                 src="/mediflow-wordmark.png"
