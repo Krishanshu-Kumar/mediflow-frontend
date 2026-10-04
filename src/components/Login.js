@@ -6,49 +6,72 @@ import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Button, Carousel, Col, Container, Form, Row } from "react-bootstrap";
-import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle } from "react-icons/fi";
+import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle, FiHome } from "react-icons/fi";
+import { ApiError } from "@/api/apiHelper";
+import { login } from "@/api/authApi";
 
-const loginSchema = Yup.object({
-  email: Yup.string()
-    .email("Enter a valid email address!")
-    .required("Email is required!"),
-  password: Yup.string().required("Password is required!"),
-});
+const buildLoginSchema = (needsTenant) =>
+  Yup.object({
+    ...(needsTenant && {
+      tenantSlug: Yup.string()
+        .trim()
+        .matches(/^[a-z0-9-]+$/i, "Use letters, numbers and dashes only!")
+        .required("Clinic ID is required!"),
+    }),
+    email: Yup.string()
+      .email("Enter a valid email address!")
+      .required("Email is required!"),
+    password: Yup.string().required("Password is required!"),
+  });
 
 const SLIDES = [
   {
     title: "Manage Patients",
     text: "Keep every patient record organized and accessible in one place.",
     color: "#0d6efd",
-    image: "/login_pic_1.png",
+    image: "/images/login_pic_1.png",
   },
   {
     title: "Schedule Appointments",
     text: "Book, reschedule, and track appointments without the back-and-forth.",
     color: "#198754",
-    image: "/login_img2.png",
+    image: "/images/login_img2.png",
   },
   {
     title: "Secure Records",
     text: "Your data is protected with industry-standard security practices.",
     color: "#6610f2",
-    image: "/login_img3.png",
+    image: "/images/login_img3.png",
   },
 ];
 
-export default function Login() {
+// `tenantSlug` comes from the /[tenant]/login route; on plain /login it is
+// undefined and the user types their Clinic ID instead.
+export default function Login({ tenantSlug }) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [submitError, setSubmitError] = useState("");
 
   const formik = useFormik({
-    initialValues: { email: "", password: "" },
-    validationSchema: loginSchema,
-    onSubmit: (values) => {
-      // TODO: wire up to the auth API once available.
-      console.log("Login submitted:", values);
-      router.push("/admin/dashboard");
+    initialValues: { tenantSlug: "", email: "", password: "" },
+    validationSchema: buildLoginSchema(!tenantSlug),
+    onSubmit: async (values) => {
+      setSubmitError("");
+      try {
+        await login({
+          tenantSlug: tenantSlug ?? values.tenantSlug.trim().toLowerCase(),
+          email: values.email.trim(),
+          password: values.password,
+          remember: rememberMe,
+        });
+        router.push("/admin/dashboard");
+      } catch (err) {
+        setSubmitError(
+          err instanceof ApiError ? err.message : "Something went wrong. Please try again.",
+        );
+      }
     },
     validateOnBlur: true,
     validateOnChange: true,
@@ -110,7 +133,7 @@ export default function Login() {
           <div className="mf-login-form" style={{ width: "100%", maxWidth: "430px" }}>
             <div className="text-center mb-4">
               <Image
-                src="/mediflow-wordmark.png"
+                src="/images/mediflow-wordmark.png"
                 alt="MediFlow"
                 width={903}
                 height={196}
@@ -122,6 +145,53 @@ export default function Login() {
             </div>
 
             <Form onSubmit={formik.handleSubmit}>
+              {!tenantSlug && (
+                <div className="mf-field-group mb-3">
+                  <div
+                    className={`mf-field${
+                      showFieldError("tenantSlug") ? " is-invalid" : ""
+                    }`}
+                  >
+                    <span className="mf-field-icon">
+                      <FiHome size={17} />
+                    </span>
+                    <div className="mf-field-body">
+                      <input
+                        id="login-tenant"
+                        type="text"
+                        name="tenantSlug"
+                        placeholder=" "
+                        value={formik.values.tenantSlug}
+                        onChange={formik.handleChange}
+                        onFocus={() => handleFieldFocus("tenantSlug")}
+                        onBlur={handleFieldBlur}
+                        autoComplete="off"
+                        spellCheck="false"
+                        autoCapitalize="none"
+                        className="mf-field-input"
+                      />
+                      <label htmlFor="login-tenant" className="mf-field-label">
+                        Clinic ID
+                      </label>
+                    </div>
+                    {showFieldError("tenantSlug") && (
+                      <span className="mf-field-alert">
+                        <FiAlertCircle size={19} />
+                      </span>
+                    )}
+                  </div>
+                  <div
+                    className={`mf-field-error${
+                      showFieldError("tenantSlug") ? " is-visible" : ""
+                    }`}
+                  >
+                    <div>
+                      <span>{formik.errors.tenantSlug}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="mf-field-group mb-3">
                 <div
                   className={`mf-field${
@@ -235,13 +305,24 @@ export default function Login() {
                 </a>
               </div>
 
+              {submitError && (
+                <div
+                  role="alert"
+                  className="alert alert-danger d-flex align-items-center gap-2 py-2 small"
+                >
+                  <FiAlertCircle size={16} className="flex-shrink-0" />
+                  <span>{submitError}</span>
+                </div>
+              )}
+
               <Button
                 type="submit"
                 variant="dark"
                 size="lg"
+                disabled={formik.isSubmitting}
                 className="w-100 rounded-pill fw-semibold"
               >
-                Login
+                {formik.isSubmitting ? "Signing in..." : "Login"}
               </Button>
 
               <p className="text-center text-muted mt-4 mb-0">

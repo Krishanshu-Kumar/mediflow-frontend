@@ -126,7 +126,7 @@ export default function Sidebar({ onNavigate }) {
             aria-label="Expand sidebar"
             title="Expand"
           >
-            <Image src="/mediflow-logo.png" alt="MediFlow" width={40} height={40} priority />
+            <Image src="/images/mediflow-logo.png" alt="MediFlow" width={40} height={40} priority />
           </button>
           <span className="mf-sidebar-title mf-sidebar-fade">MediFlow</span>
           <button

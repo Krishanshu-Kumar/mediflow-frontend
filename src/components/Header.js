@@ -53,7 +53,7 @@ export default function Header({ title = "Dashboard", breadcrumbs = [] }) {
 
       <div className="mf-header-logo">
         <Image
-          src="/mediflow-logo-2.png"
+          src="/images/mediflow-logo-2.png"
           alt="MediFlow"
           width={931}
           height={231}

@@ -238,6 +238,18 @@ a {
   color: transparent;
 }
 
+/* Stop the browser's autofill highlight from painting over the field. */
+.mf-field-input:-webkit-autofill,
+.mf-field-input:-webkit-autofill:hover,
+.mf-field-input:-webkit-autofill:focus,
+.mf-field-input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px var(--bs-body-bg) inset !important;
+  box-shadow: 0 0 0 1000px var(--bs-body-bg) inset !important;
+  -webkit-text-fill-color: var(--bs-body-color) !important;
+  caret-color: var(--bs-body-color);
+  transition: background-color 600000s 0s, color 600000s 0s;
+}
+
 .mf-field-input::-ms-reveal,
 .mf-field-input::-ms-clear {
   display: none;
