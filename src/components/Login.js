@@ -8,7 +8,9 @@ import * as Yup from "yup";
 import { Button, Carousel, Col, Container, Form, Row } from "react-bootstrap";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle, FiHome } from "react-icons/fi";
 import { ApiError } from "@/api/apiHelper";
-import { login } from "@/api/authApi";
+import { useLogin } from "@/api/authApi";
+import Loader from "@/components/Loader";
+import { useToast } from "@/components/ToastProvider";
 
 const buildLoginSchema = (needsTenant) =>
   Yup.object({
@@ -52,13 +54,13 @@ export default function Login({ tenantSlug }) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
-  const [submitError, setSubmitError] = useState("");
+  const toast = useToast();
+  const { call: login, loading } = useLogin();
 
   const formik = useFormik({
     initialValues: { tenantSlug: "", email: "", password: "" },
     validationSchema: buildLoginSchema(!tenantSlug),
     onSubmit: async (values) => {
-      setSubmitError("");
       try {
         await login({
           tenantSlug: tenantSlug ?? values.tenantSlug.trim().toLowerCase(),
@@ -66,10 +68,14 @@ export default function Login({ tenantSlug }) {
           password: values.password,
           remember: rememberMe,
         });
+        toast.success("Welcome back! Redirecting to your dashboard.", {
+          title: "Login successful",
+        });
         router.push("/admin/dashboard");
       } catch (err) {
-        setSubmitError(
+        toast.error(
           err instanceof ApiError ? err.message : "Something went wrong. Please try again.",
+          { title: "Login failed" },
         );
       }
     },
@@ -91,6 +97,7 @@ export default function Login({ tenantSlug }) {
 
   return (
     <Container fluid className="min-vh-100 d-flex flex-column py-2 mf-login-bg">
+      <Loader show={loading} />
       <Row className="flex-grow-1 g-1">
         <Col md={7} className="d-none d-md-block">
           <Carousel
@@ -304,16 +311,6 @@ export default function Login({ tenantSlug }) {
                   Forgot Password?
                 </a>
               </div>
-
-              {submitError && (
-                <div
-                  role="alert"
-                  className="alert alert-danger d-flex align-items-center gap-2 py-2 small"
-                >
-                  <FiAlertCircle size={16} className="flex-shrink-0" />
-                  <span>{submitError}</span>
-                </div>
-              )}
 
               <Button
                 type="submit"

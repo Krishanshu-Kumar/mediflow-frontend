@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   FiChevronLeft,
   FiChevronDown,
@@ -11,7 +11,7 @@ import {
   FiSearch,
   FiX,
 } from "react-icons/fi";
-import { NAV_SECTIONS, DEFAULT_SECTION } from "@/const/navigation";
+import { NAV_SECTIONS, DEFAULT_SECTION, findNavByPath } from "@/const/navigation";
 
 // TODO: replace with the signed-in user once the auth API is available.
 const CURRENT_USER = { name: "Admin User", email: "admin@mediflow.com" };
@@ -39,9 +39,12 @@ const filterSections = (query) => {
 
 export default function Sidebar({ onNavigate }) {
   const router = useRouter();
-  const [openSection, setOpenSection] = useState(DEFAULT_SECTION);
+  const pathname = usePathname();
+  // Each page mounts its own sidebar, so start from the menu that matches the current URL.
+  const [current] = useState(() => findNavByPath(pathname));
+  const [openSection, setOpenSection] = useState(current?.section ?? DEFAULT_SECTION);
   const [expanded, setExpanded] = useState(true);
-  const [activeChild, setActiveChild] = useState(null);
+  const [activeChild, setActiveChild] = useState(current?.child ?? null);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -106,9 +109,10 @@ export default function Sidebar({ onNavigate }) {
     if (event.key === "Escape") setSearchQuery("");
   };
 
-  const selectChild = (sectionKey, childKey) => {
+  const selectChild = (sectionKey, childKey, href) => {
     setActiveChild(childKey);
     onNavigate?.(sectionKey, childKey);
+    if (href && href !== pathname) router.push(href);
   };
 
   return (
@@ -173,7 +177,7 @@ export default function Sidebar({ onNavigate }) {
         </div>
 
         <nav className="mf-sidebar-nav">
-          {visibleSections.length === 0 && (
+          {isSearching && visibleSections.length === 0 && (
             <p className="mf-sidebar-search-empty mf-sidebar-fade">No menu matches</p>
           )}
           {visibleSections.map((section) => {
@@ -213,7 +217,7 @@ export default function Sidebar({ onNavigate }) {
                     }`}
                   >
                     <div className="mf-sidebar-children-inner">
-                      {section.children.map(({ key, label, icon: Icon, color }) => {
+                      {section.children.map(({ key, label, icon: Icon, color, href }) => {
                         const isChildActive = activeChild === key;
                         return (
                           <div key={key} className="mf-sidebar-tree-item">
@@ -230,7 +234,7 @@ export default function Sidebar({ onNavigate }) {
                                     }
                                   : undefined
                               }
-                              onClick={() => selectChild(section.key, key)}
+                              onClick={() => selectChild(section.key, key, href)}
                             >
                               <Icon size={17} style={{ color }} />
                               <span>{label}</span>

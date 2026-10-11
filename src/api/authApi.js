@@ -1,4 +1,5 @@
 import api, { ApiError, setAuthTokenProvider, setUnauthorizedHandler } from "./apiHelper";
+import useApi from "./useApi";
 
 const TOKEN_KEY = "mf_access_token";
 const TENANT_KEY = "mf_tenant_slug";
@@ -51,6 +52,10 @@ export async function login({ tenantSlug, email, password, remember = false }) {
 }
 
 export const getCurrentUser = () => api.get("/auth/me");
+
+// One hook per API: returns { call, loading } so the page can show <Loader show={loading} />.
+export const useLogin = () => useApi(login);
+export const useCurrentUser = () => useApi(getCurrentUser);
 
 export function logout() {
   const slug = getTenantSlug();

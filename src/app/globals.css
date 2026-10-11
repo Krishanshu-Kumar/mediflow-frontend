@@ -30,6 +30,48 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ---------- Global scrollbar ---------- */
+
+/* MediFlow blue: the same gradient as the active menu tab, on a faint blue rail. Both parts
+   are inset by a transparent border so they read as rounded pills floating in the gutter. */
+*::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+*::-webkit-scrollbar-track {
+  background-color: rgba(37, 99, 235, 0.07);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-image: linear-gradient(180deg, #3b82f6 0%, var(--mf-accent) 55%, #1e40af 100%);
+  background-clip: padding-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-image: linear-gradient(180deg, #2563eb 0%, #1d4ed8 55%, #1e3a8a 100%);
+}
+
+/* Firefox has no pseudo-elements, so it gets the standard thin scrollbar in the same blue.
+   This is behind @supports because Chromium 121+ ignores ::-webkit-scrollbar once these
+   are set. */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--mf-accent) rgba(37, 99, 235, 0.08);
+  }
+}
+
 .mf-login-bg {
   position: relative;
   isolation: isolate;
@@ -1296,4 +1338,845 @@ a {
     flex-direction: column;
     gap: 0.4rem;
   }
+}
+
+/* ---------- Toasts (components/ToastProvider.js) ---------- */
+
+.mf-toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1080;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.75rem;
+  width: min(380px, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.mf-toast {
+  --mf-toast-rgb: var(--bs-primary-rgb);
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.8rem 0.85rem 0.95rem 0.8rem;
+  overflow: hidden;
+  pointer-events: auto;
+  border: 1px solid rgba(var(--bs-body-color-rgb), 0.12);
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(var(--bs-body-bg-rgb), 0.97),
+    rgba(var(--bs-body-bg-rgb), 0.85)
+  );
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), var(--mf-surface-shadow),
+    0 14px 34px -10px rgba(0, 0, 0, 0.22);
+  animation: mf-toast-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mf-toast.is-closing {
+  animation: mf-toast-out 0.25s ease-in both;
+}
+
+.mf-toast--success {
+  --mf-toast-rgb: var(--bs-success-rgb);
+}
+
+.mf-toast--error {
+  --mf-toast-rgb: var(--bs-danger-rgb);
+}
+
+.mf-toast--warning {
+  --mf-toast-rgb: var(--bs-warning-rgb);
+}
+
+.mf-toast--info {
+  --mf-toast-rgb: var(--bs-info-rgb);
+}
+
+.mf-toast-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: rgb(var(--mf-toast-rgb));
+  background: radial-gradient(
+    circle at 30% 25%,
+    rgba(var(--mf-toast-rgb), 0.22),
+    rgba(var(--mf-toast-rgb), 0.1)
+  );
+  box-shadow: inset 0 0 0 1px rgba(var(--mf-toast-rgb), 0.28);
+}
+
+.mf-toast-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.mf-toast-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--bs-body-color);
+}
+
+.mf-toast-message {
+  font-size: 0.84rem;
+  color: rgba(var(--bs-body-color-rgb), 0.7);
+  overflow-wrap: anywhere;
+}
+
+.mf-toast-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(var(--bs-body-color-rgb), 0.5);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.mf-toast-close:hover {
+  background: rgba(var(--bs-body-color-rgb), 0.08);
+  color: var(--bs-body-color);
+}
+
+.mf-toast-close:focus-visible {
+  outline: 2px solid rgb(var(--mf-toast-rgb));
+  outline-offset: 1px;
+}
+
+/* the autohide timer: drains over --mf-toast-delay, pauses while hovered */
+.mf-toast-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5px;
+  background: rgb(var(--mf-toast-rgb));
+  transform-origin: left center;
+  animation: mf-toast-progress var(--mf-toast-delay) linear forwards;
+}
+
+.mf-toast:hover .mf-toast-progress {
+  animation-play-state: paused;
+}
+
+@keyframes mf-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(32px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes mf-toast-out {
+  to {
+    opacity: 0;
+    transform: translateX(32px) scale(0.96);
+  }
+}
+
+@keyframes mf-toast-progress {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* keep the animations (the autohide timer relies on animationend) but drop the movement */
+@media (prefers-reduced-motion: reduce) {
+  .mf-toast,
+  .mf-toast.is-closing {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* ---------- Loader (components/Loader.js) ---------- */
+
+.mf-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 1090;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(var(--bs-body-bg-rgb), 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.mf-loader-img {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+}
+
+/* ---------- Page card (components/PageCard.js) ---------- */
+
+/* same surface as the header and footer cards */
+.mf-page-card {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin: 16px 16px 16px 0;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: var(--mf-surface-shadow);
+  overflow: hidden;
+}
+
+.mf-page-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.mf-page-card-heading {
+  min-width: 0;
+}
+
+.mf-page-card-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.mf-page-card-description {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.mf-page-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* toolbar button: outlined, squared corners; hover only adds a faint tint */
+.mf-page-card-btn {
+  --mf-btn-rgb: 0, 0, 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 40px;
+  padding: 0 1.1rem;
+  border: 1px solid rgba(var(--mf-btn-rgb), 0.3);
+  border-radius: 10px;
+  background: #fff;
+  color: rgb(var(--mf-btn-rgb));
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.mf-page-card-btn--pdf {
+  --mf-btn-rgb: 220, 38, 38;
+}
+
+.mf-page-card-btn--csv {
+  --mf-btn-rgb: 22, 163, 74;
+}
+
+.mf-page-card-btn:hover {
+  background: rgba(var(--mf-btn-rgb), 0.07);
+  border-color: rgba(var(--mf-btn-rgb), 0.5);
+}
+
+.mf-page-card-btn:active {
+  background: rgba(var(--mf-btn-rgb), 0.12);
+}
+
+.mf-page-card-btn:focus-visible {
+  outline: none;
+  border-color: rgb(var(--mf-btn-rgb));
+  box-shadow: 0 0 0 3px rgba(var(--mf-btn-rgb), 0.15);
+}
+
+/* Keep the variants below the shared hover/active/focus rules above: they have equal
+   specificity, so the later rule wins. */
+
+/* primary button: the active top-level menu tab's look (blue gradient, raised glass) */
+.mf-page-card-btn--add {
+  --mf-btn-rgb: 37, 99, 235;
+  position: relative;
+  overflow: hidden;
+  border-color: transparent;
+  background: linear-gradient(135deg, #3b82f6 0%, var(--mf-accent) 55%, #1e40af 100%);
+  /* oversized so hover can slide it toward the darker end: a smooth colour shift */
+  background-size: 160% 160%;
+  background-position: 0% 0%;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 8px 18px -6px rgba(37, 99, 235, 0.6),
+    0 2px 4px -2px rgba(37, 99, 235, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transition: background-position 0.3s ease;
+}
+
+/* soft top sheen so it reads as raised glass rather than a flat fill */
+.mf-page-card-btn--add::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+  pointer-events: none;
+}
+
+/* hover: colour shift only, nothing moves. Overrides the shared outlined-button hover. */
+.mf-page-card-btn--add:hover,
+.mf-page-card-btn--add:active {
+  background: linear-gradient(135deg, #3b82f6 0%, var(--mf-accent) 55%, #1e40af 100%);
+  background-size: 160% 160%;
+  background-position: 100% 100%;
+  border-color: transparent;
+}
+
+.mf-page-card-btn--add:focus-visible {
+  border-color: transparent;
+  box-shadow: 0 8px 18px -6px rgba(37, 99, 235, 0.6), 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+.mf-page-card-body {
+  flex: 1;
+  min-height: 0;
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+.mf-page-card-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 100%;
+  text-align: center;
+}
+
+.mf-page-card-empty h3 {
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.mf-page-card-empty p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+/* teal badge, matching the Tenants menu accent */
+.mf-page-card-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(20, 184, 166, 0.12);
+  color: #0d9488;
+}
+
+/* ---------- Tenant cards (components/TenantCard.js) ---------- */
+
+.mf-tenant-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1rem;
+  align-content: start;
+}
+
+.mf-tenant-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.1rem;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 4px 12px rgba(16, 24, 40, 0.05);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mf-tenant-card:hover {
+  border-color: rgba(0, 0, 0, 0.16);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 8px 20px rgba(16, 24, 40, 0.08);
+}
+
+.mf-tenant-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* round badge tinted with the tenant's colour, like the toast and footer icons */
+.mf-tenant-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--mf-tenant-color);
+  background: color-mix(in srgb, var(--mf-tenant-color) 14%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mf-tenant-color) 28%, transparent);
+}
+
+.mf-tenant-heading {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.mf-tenant-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mf-tenant-slug {
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.mf-tenant-status {
+  flex-shrink: 0;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.mf-tenant-status--active {
+  color: #15803d;
+  background: rgba(22, 163, 74, 0.12);
+}
+
+.mf-tenant-status--trial {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.16);
+}
+
+.mf-tenant-status--inactive {
+  color: #475569;
+  background: rgba(100, 116, 139, 0.14);
+}
+
+.mf-tenant-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+  color: rgba(0, 0, 0, 0.62);
+}
+
+.mf-tenant-details li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.mf-tenant-details svg {
+  flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.mf-tenant-details span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mf-tenant-footer {
+  display: flex;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.mf-tenant-plan {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--mf-tenant-color);
+}
+
+/* ---------- Pagination (components/Pagination.js) ---------- */
+
+.mf-page-card-footer {
+  flex-shrink: 0;
+  padding: 0.8rem 1.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* summary on the left, the page buttons in a raised tray on the far right */
+.mf-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.mf-pagination-summary {
+  font-size: 0.82rem;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.mf-pagination-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: auto;
+  padding: 0.3rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff, #f8fafc);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 4px 14px rgba(16, 24, 40, 0.06);
+}
+
+.mf-pagination-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 0.6rem;
+  border: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mf-pagination-btn:hover:not(:disabled):not(.is-active) {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--mf-accent);
+}
+
+.mf-pagination-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+/* current page: the active menu tab's blue gradient with a soft top sheen */
+.mf-pagination-btn.is-active {
+  background: linear-gradient(135deg, #3b82f6 0%, var(--mf-accent) 55%, #1e40af 100%);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 6px 14px -6px rgba(37, 99, 235, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.mf-pagination-btn.is-active::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50% 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+  pointer-events: none;
+}
+
+.mf-pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.mf-pagination-gap {
+  min-width: 22px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.35);
+  user-select: none;
+}
+
+/* ---------- Filter drawer (components/FilterDrawer.js) ---------- */
+
+/* zero-width fixed rail on the right edge; the tab and panel are positioned inside it */
+.mf-filter {
+  --mf-filter-width: 320px;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  z-index: 1040;
+  pointer-events: none;
+}
+
+/* the bookmark tab: flat against the screen edge, rounded on the free side */
+.mf-filter-tab {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  /* narrow enough to overlap only the page card's padding, never its content */
+  width: 36px;
+  padding: 1rem 0;
+  border: 0;
+  border-radius: 14px 0 0 14px;
+  overflow: visible;
+  pointer-events: auto;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, #3b82f6 0%, var(--mf-accent) 55%, #1e40af 100%);
+  background-size: 100% 160%;
+  background-position: 0 0;
+  box-shadow: -6px 8px 18px -6px rgba(37, 99, 235, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  transform: translateY(-50%);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), background-position 0.3s ease;
+}
+
+.mf-filter-tab:hover {
+  background-position: 0 100%;
+}
+
+.mf-filter-tab:focus-visible {
+  outline: none;
+  box-shadow: -6px 8px 18px -6px rgba(37, 99, 235, 0.55), 0 0 0 3px rgba(37, 99, 235, 0.3);
+}
+
+.mf-filter-tab-label {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.mf-filter-badge {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--mf-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.mf-filter-panel {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  width: var(--mf-filter-width);
+  max-width: calc(100vw - 90px);
+  pointer-events: auto;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: var(--mf-surface-shadow), 0 20px 48px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+  /* closed: parked off-screen and hidden so it can't be tabbed to */
+  visibility: hidden;
+  transform: translateX(calc(100% + 32px));
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s linear 0.35s;
+}
+
+.mf-filter.is-open .mf-filter-panel {
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
+/* the tab rides along and stays attached to the panel's left edge */
+.mf-filter.is-open .mf-filter-tab {
+  transform: translate(calc(-1 * (var(--mf-filter-width) + 16px)), -50%);
+}
+
+.mf-filter-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.mf-filter-panel-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111;
+}
+
+.mf-filter-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.5);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mf-filter-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #111;
+}
+
+.mf-filter-panel-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+
+.mf-filter-group {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.mf-filter-group-label {
+  float: none;
+  width: auto;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.mf-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mf-filter-chip {
+  height: 36px;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: #fff;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 0.83rem;
+  font-weight: 600;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.mf-filter-chip:hover:not(.is-selected) {
+  background: rgba(37, 99, 235, 0.07);
+  border-color: rgba(37, 99, 235, 0.3);
+  color: var(--mf-accent);
+}
+
+.mf-filter-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.mf-filter-chip.is-selected {
+  background: rgba(37, 99, 235, 0.1);
+  border-color: var(--mf-accent);
+  color: var(--mf-accent);
+}
+
+.mf-filter-panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.mf-filter-result {
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.mf-filter-reset {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 36px;
+  margin-left: auto;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: #fff;
+  color: #111;
+  font-size: 0.83rem;
+  font-weight: 600;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.mf-filter-reset:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.25);
+}
+
+.mf-filter-reset:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
