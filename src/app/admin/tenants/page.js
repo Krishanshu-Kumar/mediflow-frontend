@@ -1,31 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaFileCsv, FaFilePdf } from "react-icons/fa";
 import { FiLayers, FiPlus, FiSearch } from "react-icons/fi";
 import AdminShell from "@/components/AdminShell";
+import {
+  useCreateTenant,
+  usePlans,
+  useSetTenantStatus,
+  useTenants,
+  useUpdateTenant,
+} from "@/api/tenantApi";
 import FilterDrawer, { FilterGroup } from "@/components/FilterDrawer";
+import Loader from "@/components/Loader";
 import PageCard from "@/components/PageCard";
 import Pagination from "@/components/Pagination";
 import TenantCard from "@/components/TenantCard";
+import TenantFormDrawer from "@/components/TenantFormDrawer";
 import { useToast } from "@/components/ToastProvider";
 import { getBreadcrumbs } from "@/const/navigation";
-import { DUMMY_TENANTS } from "@/const/tenants";
 
 const PAGE_SIZE = 6;
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All" },
   { value: "active", label: "Active" },
-  { value: "trial", label: "Trial" },
   { value: "inactive", label: "Inactive" },
-];
-
-const PLAN_OPTIONS = [
-  { value: "all", label: "All" },
-  { value: "Basic", label: "Basic" },
-  { value: "Pro", label: "Pro" },
-  { value: "Enterprise", label: "Enterprise" },
 ];
 
 const NO_FILTERS = { status: "all", plan: "all" };
@@ -35,20 +35,67 @@ export default function Tenants() {
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState(NO_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [tenants, setTenants] = useState([]);
+  const [plans, setPlans] = useState([]);
+  const [loadError, setLoadError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  // The add / edit panel: open, and the tenant being edited (null = adding a new one).
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingTenant, setEditingTenant] = useState(null);
   const toast = useToast();
+  const { call: fetchTenants, loading: tenantsLoading } = useTenants();
+  const { call: fetchPlans, loading: plansLoading } = usePlans();
+  const { call: saveTenantStatus, loading: statusSaving } = useSetTenantStatus();
+  const { call: createTenant, loading: creating } = useCreateTenant();
+  const { call: updateTenant, loading: updating } = useUpdateTenant();
 
-  // TODO: swap DUMMY_TENANTS for the tenants API once it is available (and filter/page
-  // server-side).
+  // The API has no search or total count, so load every tenant (active and inactive) once
+  // and search / filter / page here.
+  useEffect(() => {
+    fetchTenants({ activeOnly: false })
+      .then((data) => {
+        setTenants(data);
+        setLoadError(null);
+      })
+      .catch((err) => {
+        setLoadError(err.message);
+        toast.error(err.message, { title: "Couldn't load tenants" });
+      });
+  }, [fetchTenants, toast, reloadKey]);
+
+  useEffect(() => {
+    fetchPlans()
+      .then(setPlans)
+      .catch(() => setPlans([]));
+  }, [fetchPlans]);
+
+  const handleStatusChange = async (tenant, isActive) => {
+    try {
+      const updated = await saveTenantStatus(tenant.id, isActive);
+      setTenants((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+      toast.success(`${updated.name} is now ${isActive ? "active" : "inactive"}.`, {
+        title: "Status updated",
+      });
+    } catch (err) {
+      toast.error(err.message, { title: "Couldn't update status" });
+    }
+  };
+
+  const planOptions = [
+    { value: "all", label: "All" },
+    ...plans.map((plan) => ({ value: plan.code, label: plan.display_name })),
+  ];
+
   const term = query.trim().toLowerCase();
   const isSearching = term !== "";
   const activeFilterCount = Object.values(filters).filter((value) => value !== "all").length;
   const isFiltering = isSearching || activeFilterCount > 0;
-  const visibleTenants = DUMMY_TENANTS.filter(
+  const visibleTenants = tenants.filter(
     (tenant) =>
-      (filters.status === "all" || tenant.status === filters.status) &&
-      (filters.plan === "all" || tenant.plan === filters.plan) &&
+      (filters.status === "all" || tenant.is_active === (filters.status === "active")) &&
+      (filters.plan === "all" || tenant.plan_code === filters.plan) &&
       (!isSearching ||
-        [tenant.name, tenant.slug, tenant.email].some((value) =>
+        [tenant.name, tenant.slug].some((value) =>
           value.toLowerCase().includes(term),
         )),
   );
@@ -79,8 +126,32 @@ export default function Tenants() {
   const handleSearch = (event) => event.preventDefault();
 
   const handleAddTenant = () => {
-    // TODO: open the add-tenant form once the tenant fields and API are defined.
-    toast.info("The add tenant form is coming soon.", { title: "Add Tenant" });
+    setEditingTenant(null);
+    setFormOpen(true);
+  };
+
+  const handleEditTenant = (tenant) => {
+    setEditingTenant(tenant);
+    setFormOpen(true);
+  };
+
+  // Resolves true when saved so the panel closes; on an error (e.g. slug taken) it stays open.
+  const handleSaveTenant = async (values) => {
+    try {
+      if (editingTenant) {
+        const updated = await updateTenant(editingTenant.id, values);
+        setTenants((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+        toast.success(`${updated.name} was updated.`, { title: "Tenant updated" });
+      } else {
+        const created = await createTenant(values);
+        setTenants((prev) => [created, ...prev]);
+        toast.success(`${created.name} was added.`, { title: "Tenant added" });
+      }
+      return true;
+    } catch (err) {
+      toast.error(err.message, { title: editingTenant ? "Couldn't update tenant" : "Couldn't add tenant" });
+      return false;
+    }
   };
 
   const handleExport = (format) => {
@@ -90,6 +161,7 @@ export default function Tenants() {
 
   return (
     <AdminShell title="Tenants" breadcrumbs={getBreadcrumbs("management", "tenants")}>
+      <Loader show={tenantsLoading || plansLoading || statusSaving || creating || updating} />
       <PageCard
             scrollResetKey={currentPage}
             footer={
@@ -147,10 +219,31 @@ export default function Tenants() {
             {visibleTenants.length > 0 ? (
               <div className="mf-tenant-grid">
                 {pagedTenants.map((tenant) => (
-                  <TenantCard key={tenant.id} tenant={tenant} />
+                  <TenantCard
+                    key={tenant.id}
+                    tenant={tenant}
+                    onStatusChange={handleStatusChange}
+                    onEdit={handleEditTenant}
+                    statusDisabled={statusSaving}
+                  />
                 ))}
               </div>
-            ) : (
+            ) : loadError ? (
+              <div className="mf-page-card-empty">
+                <span className="mf-page-card-empty-icon">
+                  <FiLayers size={24} />
+                </span>
+                <h3>Couldn&apos;t load tenants</h3>
+                <p>{loadError}</p>
+                <button
+                  type="button"
+                  className="mf-page-card-btn mf-page-card-btn--add"
+                  onClick={() => setReloadKey((key) => key + 1)}
+                >
+                  Try again
+                </button>
+              </div>
+            ) : tenantsLoading ? null : (
               <div className="mf-page-card-empty">
                 <span className="mf-page-card-empty-icon">
                   <FiLayers size={24} />
@@ -165,12 +258,21 @@ export default function Tenants() {
             )}
       </PageCard>
 
+      <TenantFormDrawer
+        show={formOpen}
+        tenant={editingTenant}
+        plans={plans}
+        saving={creating || updating}
+        onHide={() => setFormOpen(false)}
+        onSave={handleSaveTenant}
+      />
+
       <FilterDrawer
         open={filtersOpen}
         onOpenChange={setFiltersOpen}
         activeCount={activeFilterCount}
         onReset={resetFilters}
-        resultText={`${visibleTenants.length} of ${DUMMY_TENANTS.length} tenants`}
+        resultText={`${visibleTenants.length} of ${tenants.length} tenants`}
       >
         <FilterGroup
           label="Status"
@@ -180,7 +282,7 @@ export default function Tenants() {
         />
         <FilterGroup
           label="Plan"
-          options={PLAN_OPTIONS}
+          options={planOptions}
           value={filters.plan}
           onChange={updateFilter("plan")}
         />

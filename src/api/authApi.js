@@ -1,39 +1,8 @@
-import api, { ApiError, setAuthTokenProvider, setUnauthorizedHandler } from "./apiHelper";
+import api, { ApiError, setUnauthorizedHandler } from "./apiHelper";
+import { clearSession, getTenantSlug, saveSession } from "./tokenStorage";
 import useApi from "./useApi";
 
-const TOKEN_KEY = "mf_access_token";
-const TENANT_KEY = "mf_tenant_slug";
-
-// "Remember me" keeps the session in localStorage; otherwise it ends with the tab.
-const stores = () => (typeof window === "undefined" ? [] : [window.localStorage, window.sessionStorage]);
-
-function read(key) {
-  for (const store of stores()) {
-    try {
-      const value = store.getItem(key);
-      if (value) return value;
-    } catch {}
-  }
-  return null;
-}
-
-function write(key, value, remember) {
-  try {
-    (remember ? window.localStorage : window.sessionStorage).setItem(key, value);
-  } catch {}
-}
-
-export const getAccessToken = () => read(TOKEN_KEY);
-export const getTenantSlug = () => read(TENANT_KEY);
-
-export function clearSession() {
-  for (const store of stores()) {
-    try {
-      store.removeItem(TOKEN_KEY);
-      store.removeItem(TENANT_KEY);
-    } catch {}
-  }
-}
+export { clearSession, getAccessToken, getTenantSlug } from "./tokenStorage";
 
 /** POST /auth/login. The first call can be slow while the free-tier backend wakes up. */
 export async function login({ tenantSlug, email, password, remember = false }) {
@@ -46,9 +15,7 @@ export async function login({ tenantSlug, email, password, remember = false }) {
   const access_token = body?.access_token ?? body?.data?.access_token;
   if (!access_token) throw new ApiError("Unexpected response from the server.", { data: body });
 
-  clearSession();
-  write(TOKEN_KEY, access_token, remember);
-  write(TENANT_KEY, tenantSlug, remember);
+  saveSession({ accessToken: access_token, tenantSlug, remember });
 }
 
 export const getCurrentUser = () => api.get("/auth/me");
@@ -63,6 +30,5 @@ export function logout() {
   window.location.assign(slug ? `/${slug}/login` : "/login");
 }
 
-// Wire the interceptors: attach the stored token, and drop the session on a 401.
-setAuthTokenProvider(getAccessToken);
+// Drop the session on a 401. (The token itself is attached by apiHelper.)
 setUnauthorizedHandler(logout);

@@ -10,6 +10,8 @@
  * `ApiError` (non-2xx, network failure, timeout or abort).
  */
 
+import { getAccessToken } from "./tokenStorage";
+
 // const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://mediflow-backend-c3br.onrender.com";
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 const DEFAULT_TIMEOUT_MS = 15000;
@@ -59,7 +61,7 @@ export const interceptors = {
 
 /* --------------------------------- helpers ----------------------------------- */
 
-let tokenProvider = () => null;
+let tokenProvider = getAccessToken;
 let unauthorizedHandler = null;
 
 /** Tell the client where to read the auth token from, e.g. () => localStorage.getItem("token"). */
