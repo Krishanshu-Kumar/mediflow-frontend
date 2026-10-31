@@ -4,16 +4,29 @@ import { useState } from "react";
 import { Offcanvas } from "react-bootstrap";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { FiAlertCircle, FiHome, FiLink, FiX } from "react-icons/fi";
-import { FilterGroup } from "@/components/FilterDrawer";
+import { FiAlertCircle, FiHome, FiLayers, FiLink, FiX } from "react-icons/fi";
+import SelectField from "@/components/SelectField";
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
+// True when the value is only digits (and separators), e.g. "123" or "12-34".
+const isOnlyNumbers = (value) => /^[\d\s-]+$/.test(value);
+
+// True when the value has at least one letter (so "!!!" or "@#$" is rejected).
+const hasLetter = (value) => /\p{L}/u.test(value);
+
 const tenantSchema = Yup.object({
-  name: Yup.string().trim().max(255, "Keep the name under 255 characters.").required("Name is required!"),
+  name: Yup.string()
+    .trim()
+    .max(255, "Keep the name under 255 characters.")
+    .test("not-only-numbers", "Name can't be only numbers.", (value) => !value || !isOnlyNumbers(value))
+    .test("not-only-symbols", "Name needs at least one letter.", (value) => !value || hasLetter(value))
+    .required("Name is required!"),
   slug: Yup.string()
     .max(100, "Keep the slug under 100 characters.")
     .matches(SLUG_PATTERN, "Use lowercase letters, numbers and single hyphens only.")
+    .test("not-only-numbers", "Slug can't be only numbers.", (value) => !value || !isOnlyNumbers(value))
+    .test("not-only-symbols", "Slug needs at least one letter.", (value) => !value || hasLetter(value))
     .required("Slug is required!"),
   planCode: Yup.number().required("Pick a plan."),
 });
@@ -144,11 +157,17 @@ export default function TenantFormDrawer({ show, tenant, plans, saving, onHide, 
             onChange={handleSlugChange}
             hint={`Staff sign in at /${formik.values.slug || "your-slug"}/login`}
           />
-          <FilterGroup
+          <SelectField
+            id="tenant-plan"
             label="Plan"
+            icon={<FiLayers size={17} />}
             options={plans.map((plan) => ({ value: plan.code, label: plan.display_name }))}
             value={formik.values.planCode}
             onChange={(code) => formik.setFieldValue("planCode", code)}
+            onBlur={() => formik.setFieldTouched("planCode", true)}
+            error={
+              (formik.touched.planCode || formik.submitCount > 0) ? formik.errors.planCode : undefined
+            }
           />
         </div>
 
