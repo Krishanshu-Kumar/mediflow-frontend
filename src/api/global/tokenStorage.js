@@ -43,3 +43,35 @@ export function clearSession() {
     } catch {}
   }
 }
+
+/* ---------------------------- expiry helpers ---------------------------- */
+
+/** True when the token is a JWT whose `exp` has passed. Non-JWT tokens are never treated as expired. */
+export function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof payload.exp === "number" && payload.exp * 1000 <= Date.now();
+  } catch {
+    return false;
+  }
+}
+
+// A one-shot note for the login page: "you were signed out because your session expired".
+const EXPIRED_KEY = "mf_session_expired";
+
+export function markSessionExpired() {
+  try {
+    window.sessionStorage.setItem(EXPIRED_KEY, "1");
+  } catch {}
+}
+
+/** Returns true once, then forgets it. */
+export function consumeSessionExpired() {
+  try {
+    const expired = window.sessionStorage.getItem(EXPIRED_KEY) === "1";
+    window.sessionStorage.removeItem(EXPIRED_KEY);
+    return expired;
+  } catch {
+    return false;
+  }
+}

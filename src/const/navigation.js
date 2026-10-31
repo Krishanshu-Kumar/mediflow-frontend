@@ -1,4 +1,4 @@
-import { FiLayers, FiSettings } from "react-icons/fi";
+import { FiLayers, FiList, FiSettings } from "react-icons/fi";
 
 // Each item: { key, label, icon, children?: [{ key, label, icon, color, href? }] }
 export const NAV_SECTIONS = [
@@ -8,6 +8,7 @@ export const NAV_SECTIONS = [
     icon: FiSettings,
     children: [
       { key: "tenants", label: "Tenants", icon: FiLayers, color: "#0d9488", href: "/admin/tenants" },
+      { key: "master-codes", label: "Master Codes", icon: FiList, color: "#7c3aed", href: "/admin/master-codes" },
     ],
   },
 ];

@@ -1,8 +1,14 @@
-import api, { ApiError, setUnauthorizedHandler } from "./apiHelper";
-import { clearSession, getTenantSlug, saveSession } from "./tokenStorage";
-import useApi from "./useApi";
+import api, { ApiError, setUnauthorizedHandler } from "../global/apiHelper";
+import { clearSession, getTenantSlug, markSessionExpired, saveSession } from "../global/tokenStorage";
+import useApi from "../global/useApi";
 
-export { clearSession, getAccessToken, getTenantSlug } from "./tokenStorage";
+export {
+  clearSession,
+  consumeSessionExpired,
+  getAccessToken,
+  getTenantSlug,
+  isTokenExpired,
+} from "../global/tokenStorage";
 
 /** POST /auth/login. The first call can be slow while the free-tier backend wakes up. */
 export async function login({ tenantSlug, email, password, remember = false }) {
@@ -30,5 +36,14 @@ export function logout() {
   window.location.assign(slug ? `/${slug}/login` : "/login");
 }
 
+/** Sign out because the token is no longer valid; the login page shows a "session expired" toast. */
+let expiring = false;
+export function expireSession() {
+  if (expiring) return; // several calls can fail with 401 at once
+  expiring = true;
+  markSessionExpired();
+  logout();
+}
+
 // Drop the session on a 401. (The token itself is attached by apiHelper.)
-setUnauthorizedHandler(logout);
+setUnauthorizedHandler(expireSession);

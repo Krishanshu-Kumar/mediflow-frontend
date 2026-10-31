@@ -1,5 +1,6 @@
-import api from "./apiHelper";
-import useApi from "./useApi";
+import api from "../global/apiHelper";
+import useApi from "../global/useApi";
+import { getMasterCodes } from "../masterCode/masterCodeApi";
 
 // All /tenants routes require a Super Admin token (attached by the apiHelper interceptor).
 
@@ -23,8 +24,7 @@ export const setTenantStatus = (tenantId, isActive) =>
 // Tenant plans are master codes in category 1000 (1001 Free, 1002 Pro, 1003 Enterprise).
 const PLAN_CATEGORY = 1000;
 
-export const getPlans = () =>
-  api.get("/settings/master-codes/", { params: { category_code: PLAN_CATEGORY } });
+export const getPlans = () => getMasterCodes({ categoryCode: PLAN_CATEGORY });
 
 // One hook per API: returns { call, loading } so the page can show <Loader show={loading} />.
 export const useTenants = () => useApi(getTenants);

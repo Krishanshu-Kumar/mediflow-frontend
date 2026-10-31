@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { Button, Carousel, Col, Container, Form, Row } from "react-bootstrap";
 import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle, FiHome } from "react-icons/fi";
-import { ApiError } from "@/api/apiHelper";
-import { useLogin } from "@/api/authApi";
+import { ApiError } from "@/api/global/apiHelper";
+import { consumeSessionExpired, useLogin } from "@/api/auth/authApi";
 import Loader from "@/components/Loader";
 import { useToast } from "@/components/ToastProvider";
 
@@ -56,6 +56,15 @@ export default function Login({ tenantSlug }) {
   const [focusedField, setFocusedField] = useState(null);
   const toast = useToast();
   const { call: login, loading } = useLogin();
+
+  // Sent here because the token expired (see expireSession in authApi).
+  useEffect(() => {
+    if (consumeSessionExpired()) {
+      toast.warning("Your session has expired. Please sign in again.", {
+        title: "Session expired",
+      });
+    }
+  }, [toast]);
 
   const formik = useFormik({
     initialValues: { tenantSlug: "", email: "", password: "" },

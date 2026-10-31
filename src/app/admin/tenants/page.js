@@ -10,7 +10,7 @@ import {
   useSetTenantStatus,
   useTenants,
   useUpdateTenant,
-} from "@/api/tenantApi";
+} from "@/api/tenant/tenantApi";
 import FilterDrawer, { FilterGroup } from "@/components/FilterDrawer";
 import Loader from "@/components/Loader";
 import PageCard from "@/components/PageCard";

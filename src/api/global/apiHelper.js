@@ -1,7 +1,7 @@
 /**
  * Small fetch-based API client with interceptors (no extra dependencies).
  *
- *   import api from "@/api/apiHelper";
+ *   import api from "@/api/global/apiHelper";
  *
  *   const patients = await api.get("/patients", { params: { page: 1 } });
  *   await api.post("/auth/login", { email, password });
@@ -12,8 +12,8 @@
 
 import { getAccessToken } from "./tokenStorage";
 
-// const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://mediflow-backend-c3br.onrender.com";
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://mediflow-backend-c3br.onrender.com";
+// const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 const DEFAULT_TIMEOUT_MS = 15000;
 
 export class ApiError extends Error {
