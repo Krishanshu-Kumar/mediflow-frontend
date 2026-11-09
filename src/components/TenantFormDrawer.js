@@ -40,7 +40,7 @@ const slugify = (text) =>
     .slice(0, 100);
 
 /** One floating-label field, styled like the login form. */
-function Field({ id, name, label, icon, formik, onChange, hint }) {
+export function Field({ id, name, label, icon, formik, onChange, hint }) {
   const showError = (formik.touched[name] || formik.submitCount > 0) && formik.errors[name];
 
   return (

@@ -1124,6 +1124,150 @@ a {
   color: #111;
 }
 
+/* roles page: search box with a tenant dropdown beside it */
+.mf-roles-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.mf-header-select.btn,
+.mf-header-select {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 40px;
+  width: 280px;
+  max-width: 100%;
+  padding: 0 0.7rem 0 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  color: #111;
+  text-align: left;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mf-header-select::after {
+  display: none;
+}
+
+.mf-header-select:hover {
+  border-color: rgba(37, 99, 235, 0.4);
+}
+
+.mf-header-select.show {
+  border-color: var(--mf-accent);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.mf-header-select-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--mf-accent);
+}
+
+.mf-header-select-text {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.mf-header-select-caption {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.mf-header-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.mf-header-select-chevron {
+  flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.45);
+  transition: transform 0.2s ease;
+}
+
+.mf-header-select.show .mf-header-select-chevron {
+  transform: rotate(180deg);
+  color: var(--mf-accent);
+}
+
+.mf-select-menu.mf-header-select-menu.dropdown-menu {
+  min-width: 280px;
+  padding: 0.4rem;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px -10px rgba(0, 0, 0, 0.25), 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.mf-header-select-heading {
+  padding: 0.4rem 0.7rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.42);
+}
+
+.mf-header-select-list {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.mf-header-select-menu .mf-select-option.dropdown-item {
+  justify-content: flex-start;
+  gap: 0.65rem;
+  padding: 0.5rem 0.65rem;
+}
+
+.mf-header-select-menu .mf-select-option.dropdown-item > svg {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.mf-header-select-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--mf-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.mf-header-select-menu .mf-select-option.active .mf-header-select-avatar {
+  background: var(--mf-accent);
+  color: #fff;
+}
+
+.mf-header-select-name {
+  min-width: 0;
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .mf-header-theme {
   position: relative;
   display: grid;
@@ -2571,6 +2715,40 @@ a {
 .mf-tenant-edit:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+/* round icon button for a table row's action (e.g. edit) */
+.mf-row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.07);
+  color: var(--mf-accent);
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.mf-row-action:hover {
+  background: var(--mf-accent);
+  border-color: var(--mf-accent);
+  color: #fff;
+  box-shadow: 0 6px 14px -4px rgba(37, 99, 235, 0.55);
+  transform: translateY(-1px);
+}
+
+.mf-row-action:active {
+  transform: translateY(0) scale(0.95);
+  box-shadow: none;
+}
+
+.mf-row-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
 }
 
 /* ---------- Master codes table (app/admin/master-codes/page.js) ---------- */
