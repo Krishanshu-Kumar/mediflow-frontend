@@ -30,8 +30,27 @@ export const updateRole = (roleId, { name }) => api.put(`/roles/${roleId}`, { na
 export const setRoleStatus = (roleId, isActive) =>
   api.patch(`/roles/${roleId}/status`, undefined, { params: { is_active: isActive } });
 
+/**
+ * GET /roles/{id}/permissions — the permissions granted to a role. Returns an array of
+ * permissions; a bare list of codes (strings) is turned into { code } objects.
+ */
+export const getRolePermissions = async (roleId) => {
+  const data = await api.get(`/roles/${roleId}/permissions`);
+  const list = Array.isArray(data) ? data : (data?.items ?? data?.permissions ?? []);
+  return list.map((item) => (typeof item === "string" ? { code: item } : item));
+};
+
+/**
+ * PUT /roles/{id}/permissions with { permission_codes: [...] } — replaces the role's whole
+ * permission set with exactly these codes.
+ */
+export const setRolePermissions = (roleId, codes) =>
+  api.put(`/roles/${roleId}/permissions`, { permission_codes: codes });
+
 // One hook per API: returns { call, loading } so the page can show <Loader show={loading} />.
 export const useRoles = () => useApi(getRoles);
 export const useSetRoleStatus = () => useApi(setRoleStatus);
+export const useRolePermissions = () => useApi(getRolePermissions);
+export const useSetRolePermissions = () => useApi(setRolePermissions);
 export const useCreateRole = () => useApi(createRole);
 export const useUpdateRole = () => useApi(updateRole);

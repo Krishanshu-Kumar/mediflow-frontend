@@ -1,16 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Dropdown } from "react-bootstrap";
 import { FaFileCsv, FaFilePdf } from "react-icons/fa";
-import { FiCheck, FiChevronDown, FiEdit2, FiHome, FiPlus, FiSearch, FiShield } from "react-icons/fi";
-import { useCreateRole, useRoles, useSetRoleStatus, useUpdateRole } from "@/api/role/roleApi";
+import {
+  FiCheck,
+  FiCheckSquare,
+  FiChevronDown,
+  FiEdit2,
+  FiHome,
+  FiKey,
+  FiPlus,
+  FiSearch,
+  FiShield,
+} from "react-icons/fi";
+import {
+  useCreateRole,
+  useRolePermissions,
+  useRoles,
+  useSetRolePermissions,
+  useSetRoleStatus,
+  useUpdateRole,
+} from "@/api/role/roleApi";
 import { useTenants } from "@/api/tenant/tenantApi";
 import AdminShell from "@/components/AdminShell";
 import Loader from "@/components/Loader";
 import PageCard from "@/components/PageCard";
 import Pagination from "@/components/Pagination";
 import RoleFormDrawer from "@/components/RoleFormDrawer";
+import RolePermissionsDrawer from "@/components/RolePermissionsDrawer";
 import { useToast } from "@/components/ToastProvider";
 import { getBreadcrumbs } from "@/const/navigation";
 
@@ -39,6 +57,10 @@ export default function RolesPage() {
   const [tenantId, setTenantId] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
+  // The role whose permissions are open underneath its row (only one at a time), and what
+  // was loaded for it: { items } or { error }; no entry yet means it is still loading.
+  const [openRoleId, setOpenRoleId] = useState(null);
+  const [rolePermissions, setRolePermissions] = useState({});
   const [loadError, setLoadError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
   const toast = useToast();
@@ -47,6 +69,44 @@ export default function RolesPage() {
   const { call: addRole, loading: creating } = useCreateRole();
   const { call: editRole, loading: updating } = useUpdateRole();
   const { call: saveRoleStatus, loading: statusSaving } = useSetRoleStatus();
+
+  const { call: fetchRolePermissions } = useRolePermissions();
+  const { call: savePermissions, loading: permissionsSaving } = useSetRolePermissions();
+  const [permissionsRole, setPermissionsRole] = useState(null);
+
+  // `selected` is the full list of permission objects the user ticked.
+  const handleSavePermissions = async (selected) => {
+    try {
+      await savePermissions(
+        permissionsRole.id,
+        selected.map((p) => p.code),
+      );
+      // Keep an already-open list for this role in step with what was just saved.
+      setRolePermissions((prev) => ({ ...prev, [permissionsRole.id]: { items: selected } }));
+      toast.success(`Permissions for ${permissionsRole.name} were saved.`, {
+        title: "Permissions updated",
+      });
+      return true;
+    } catch (err) {
+      toast.error(err.message, { title: "Couldn't save permissions" });
+      return false;
+    }
+  };
+
+  // Opening a role loads its permissions fresh; opening it again closes it.
+  const togglePermissions = (role) => {
+    if (openRoleId === role.id) {
+      setOpenRoleId(null);
+      return;
+    }
+    setOpenRoleId(role.id);
+    setRolePermissions((prev) => ({ ...prev, [role.id]: undefined }));
+    fetchRolePermissions(role.id)
+      .then((items) => setRolePermissions((prev) => ({ ...prev, [role.id]: { items } })))
+      .catch((err) =>
+        setRolePermissions((prev) => ({ ...prev, [role.id]: { error: err.message } })),
+      );
+  };
 
   const handleStatusChange = async (role, isActive) => {
     try {
@@ -280,8 +340,12 @@ export default function RolesPage() {
               </tr>
             </thead>
             <tbody>
-              {visibleRoles.map((role, index) => (
-                <tr key={role.id ?? index}>
+              {visibleRoles.map((role, index) => {
+                const isOpen = openRoleId === role.id;
+                const loaded = rolePermissions[role.id];
+                return (
+                <Fragment key={role.id ?? index}>
+                <tr className={isOpen ? "mf-mc-row is-open" : undefined}>
                   <td className="mf-mc-muted">{firstNumber + index + 1}</td>
                   <td>{role.name}</td>
                   <td>
@@ -307,7 +371,26 @@ export default function RolesPage() {
                   </td>
                   <td>{formatDate(role.created_at)}</td>
                   <td>{formatDate(role.updated_at)}</td>
-                  <td>
+                  <td className="mf-row-actions">
+                    <button
+                      type="button"
+                      className={`mf-row-action${isOpen ? " is-active" : ""}`}
+                      onClick={() => togglePermissions(role)}
+                      aria-expanded={isOpen}
+                      aria-label={`View permissions of ${role.name}`}
+                      title="View permissions"
+                    >
+                      <FiKey size={15} />
+                    </button>
+                    <button
+                      type="button"
+                      className="mf-row-action"
+                      onClick={() => setPermissionsRole(role)}
+                      aria-label={`Set permissions of ${role.name}`}
+                      title="Set permissions"
+                    >
+                      <FiCheckSquare size={15} />
+                    </button>
                     <button
                       type="button"
                       className="mf-row-action"
@@ -319,7 +402,54 @@ export default function RolesPage() {
                     </button>
                   </td>
                 </tr>
-              ))}
+                <tr className="mf-mc-detail-row">
+                  <td colSpan={6}>
+                    <div className={`mf-mc-collapse${isOpen ? " is-open" : ""}`}>
+                      <div>
+                        {loaded?.items?.length > 0 ? (
+                          <table className="mf-mc-subtable">
+                            <thead>
+                              <tr>
+                                <th>#</th>
+                                <th>Code</th>
+                                <th>Display name</th>
+                                <th>Scope</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {loaded.items.map((permission, permissionIndex) => (
+                                <tr key={permission.code}>
+                                  <td className="mf-mc-muted">{permissionIndex + 1}</td>
+                                  <td className="mf-mc-code">{permission.code}</td>
+                                  <td>{permission.display_name}</td>
+                                  <td>
+                                    {permission.scope && (
+                                      <span className={`mf-scope-badge is-${permission.scope}`}>
+                                        {permission.scope.charAt(0).toUpperCase() +
+                                          permission.scope.slice(1)}
+                                      </span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        ) : (
+                          <p className="mf-mc-muted mb-0 py-3 text-center">
+                            {!loaded
+                              ? "Loading permissions..."
+                              : loaded.error
+                                ? `Couldn't load permissions: ${loaded.error}`
+                                : "No permissions are assigned to this role."}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                </Fragment>
+                );
+              })}
             </tbody>
           </table>
         ) : loadError ? (
@@ -347,6 +477,12 @@ export default function RolesPage() {
           </div>
         )}
       </PageCard>
+      <RolePermissionsDrawer
+        role={permissionsRole}
+        saving={permissionsSaving}
+        onHide={() => setPermissionsRole(null)}
+        onSave={handleSavePermissions}
+      />
       <RoleFormDrawer
         show={formOpen}
         role={editingRole}

@@ -3,7 +3,7 @@
 import { Offcanvas } from "react-bootstrap";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { FiAlignLeft, FiGlobe, FiKey, FiTag, FiX } from "react-icons/fi";
+import { FiAlignLeft, FiGlobe, FiInfo, FiKey, FiLock, FiTag, FiX } from "react-icons/fi";
 import SelectField from "@/components/SelectField";
 import { Field } from "@/components/TenantFormDrawer";
 
@@ -12,14 +12,23 @@ export const SCOPE_OPTIONS = [
   { value: "tenant", label: "Tenant" },
 ];
 
-const permissionSchema = Yup.object({
+const DISPLAY_NAME_MAX = 50;
+const DESCRIPTION_MAX = 50;
+
+const permissionSchema =Yup.object({
   code: Yup.string()
     .trim()
     .max(100, "Keep the code under 100 characters.")
     .matches(/^[a-z0-9_]+\.[a-z0-9_]+$/, "Use resource.action in lowercase, e.g. user.create.")
     .required("Code is required!"),
-  displayName: Yup.string().trim().max(255, "Keep the display name under 255 characters."),
-  description: Yup.string().trim().required("Description is required!"),
+  displayName: Yup.string()
+    .trim()
+    .max(DISPLAY_NAME_MAX, `Keep the display name to ${DISPLAY_NAME_MAX} characters or fewer.`)
+    .required("Display name is required!"),
+  description: Yup.string()
+    .trim()
+    .max(DESCRIPTION_MAX, `Keep the description to ${DESCRIPTION_MAX} characters or fewer.`)
+    .required("Description is required!"),
   scope: Yup.string().required("Pick a scope."),
 });
 
@@ -75,7 +84,7 @@ export default function PermissionFormDrawer({ show, permission, saving, onHide,
         <div className="mf-filter-panel-body">
           {isEdit ? (
             <div className="mf-field-group">
-              <div className="mf-field">
+              <div className="mf-field is-locked" title="The code can't be changed once set.">
                 <span className="mf-field-icon">
                   <FiKey size={17} />
                 </span>
@@ -93,13 +102,22 @@ export default function PermissionFormDrawer({ show, permission, saving, onHide,
                     Code
                   </label>
                 </div>
+                <span className="mf-field-lock">
+                  <FiLock size={12} />
+                  Locked
+                </span>
               </div>
+              <p className="mf-locked-note">
+                <FiInfo size={13} />
+                <span>Code can&apos;t be edited once added.</span>
+              </p>
             </div>
           ) : (
             <Field
               id="permission-code"
               name="code"
               label="Code"
+              required
               icon={<FiKey size={17} />}
               formik={formik}
               hint="Lowercase resource.action, e.g. user.create"
@@ -108,25 +126,32 @@ export default function PermissionFormDrawer({ show, permission, saving, onHide,
           <Field
             id="permission-display-name"
             name="displayName"
-            label="Display name (optional)"
+            label="Display name"
+            required
             icon={<FiTag size={17} />}
             formik={formik}
+            maxLength={DISPLAY_NAME_MAX}
+            hint={`Up to ${DISPLAY_NAME_MAX} characters (${formik.values.displayName.length}/${DISPLAY_NAME_MAX})`}
           />
           <Field
             id="permission-description"
             name="description"
             label="Description"
+            required
             icon={<FiAlignLeft size={17} />}
             formik={formik}
+            maxLength={DESCRIPTION_MAX}
+            hint={`Up to ${DESCRIPTION_MAX} characters (${formik.values.description.length}/${DESCRIPTION_MAX})`}
           />
           <SelectField
             id="permission-scope"
             label="Scope"
+            required
             icon={<FiGlobe size={17} />}
             options={SCOPE_OPTIONS}
             value={formik.values.scope}
             onChange={(value) => formik.setFieldValue("scope", value)}
-            onBlur={() => formik.setFieldTouched("scope", true)}
+            onBlur={() => formik.setFieldTouched("scope", true, false)}
             error={formik.touched.scope || formik.submitCount > 0 ? formik.errors.scope : undefined}
           />
         </div>

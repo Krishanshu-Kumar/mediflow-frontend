@@ -20,6 +20,7 @@ import {
   useUpdatePermission,
 } from "@/api/permission/permissionApi";
 import AdminShell from "@/components/AdminShell";
+import ConfirmModal from "@/components/ConfirmModal";
 import Loader from "@/components/Loader";
 import PageCard from "@/components/PageCard";
 import Pagination from "@/components/Pagination";
@@ -49,6 +50,7 @@ export default function PermissionsPage() {
   const [scope, setScope] = useState("all");
   const [formOpen, setFormOpen] = useState(false);
   const [editingPermission, setEditingPermission] = useState(null);
+  const [deletingPermission, setDeletingPermission] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
   const toast = useToast();
@@ -100,26 +102,16 @@ export default function PermissionsPage() {
   // The list filters as you type, so submitting just keeps the page from reloading.
   const handleSearch = (event) => event.preventDefault();
 
-  const handleStatusChange = async (permission, isActive) => {
-    try {
-      const updated = await editPermission(permission.code, { isActive });
-      setPermissions((prev) => prev.map((p) => (p.code === updated.code ? updated : p)));
-      toast.success(`${updated.code} is now ${isActive ? "active" : "inactive"}.`, {
-        title: "Status updated",
-      });
-    } catch (err) {
-      toast.error(err.message, { title: "Couldn't update status" });
-    }
-  };
-
-  const handleDeletePermission = async (permission) => {
-    if (!window.confirm(`Delete permission "${permission.code}"? This can't be undone.`)) return;
+  const handleConfirmDelete = async () => {
+    const permission = deletingPermission;
     try {
       await removePermission(permission.code);
       setPermissions((prev) => prev.filter((p) => p.code !== permission.code));
       toast.success(`${permission.code} was deleted.`, { title: "Permission deleted" });
     } catch (err) {
       toast.error(err.message, { title: "Couldn't delete permission" });
+    } finally {
+      setDeletingPermission(null);
     }
   };
 
@@ -168,14 +160,13 @@ export default function PermissionsPage() {
       return;
     }
     const cell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
-    const lines = [["Code", "Display name", "Description", "Scope", "Status", "Created", "Updated"]];
+    const lines = [["Code", "Display name", "Description", "Scope", "Created", "Updated"]];
     matching.forEach((permission) =>
       lines.push([
         permission.code,
         permission.display_name,
         permission.description,
         scopeLabel(permission.scope),
-        permission.is_active ? "Active" : "Inactive",
         formatDate(permission.created_at),
         formatDate(permission.updated_at),
       ]),
@@ -293,7 +284,6 @@ export default function PermissionsPage() {
                 <th>Display name</th>
                 <th>Description</th>
                 <th>Scope</th>
-                <th>Status</th>
                 <th>Created</th>
                 <th>Updated</th>
                 <th>Action</th>
@@ -306,31 +296,14 @@ export default function PermissionsPage() {
                   <td>{permission.code}</td>
                   <td>{permission.display_name}</td>
                   <td>{permission.description}</td>
-                  <td>{scopeLabel(permission.scope)}</td>
                   <td>
-                    <label
-                      className={`mf-switch${permission.is_active ? " is-on" : ""}`}
-                      title="Set permission status"
-                    >
-                      <input
-                        type="checkbox"
-                        role="switch"
-                        className="mf-switch-input"
-                        checked={Boolean(permission.is_active)}
-                        disabled={updating}
-                        onChange={(event) => handleStatusChange(permission, event.target.checked)}
-                        aria-label={`${permission.code} active`}
-                      />
-                      <span className="mf-switch-track" aria-hidden="true">
-                        <span className="mf-switch-thumb">
-                          <FiCheck size={10} strokeWidth={3.5} />
-                        </span>
-                      </span>
-                    </label>
+                    <span className={`mf-scope-badge is-${permission.scope}`}>
+                      {scopeLabel(permission.scope)}
+                    </span>
                   </td>
                   <td>{formatDate(permission.created_at)}</td>
                   <td>{formatDate(permission.updated_at)}</td>
-                  <td>
+                  <td className="mf-row-actions">
                     <button
                       type="button"
                       className="mf-row-action"
@@ -342,9 +315,8 @@ export default function PermissionsPage() {
                     </button>
                     <button
                       type="button"
-                      className="mf-row-action"
-                      onClick={() => handleDeletePermission(permission)}
-                      disabled={deleting}
+                      className="mf-row-action is-danger"
+                      onClick={() => setDeletingPermission(permission)}
                       aria-label={`Delete ${permission.code}`}
                       title="Delete permission"
                     >
@@ -386,6 +358,18 @@ export default function PermissionsPage() {
         saving={creating || updating}
         onHide={() => setFormOpen(false)}
         onSave={handleSavePermission}
+      />
+      <ConfirmModal
+        show={deletingPermission !== null}
+        title="Delete permission?"
+        message={
+          deletingPermission
+            ? `"${deletingPermission.code}" will be permanently removed. This can't be undone.`
+            : ""
+        }
+        busy={deleting}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeletingPermission(null)}
       />
     </AdminShell>
   );

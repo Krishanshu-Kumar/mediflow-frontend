@@ -219,6 +219,68 @@ a {
   transform: translateX(-6px);
 }
 
+/* locked (read-only) field: muted fill, no hover/focus lift, lock icon at the end */
+.mf-field.is-locked,
+.mf-field.is-locked:hover,
+.mf-tenant-form .mf-field.is-locked,
+.mf-tenant-form .mf-field.is-locked:hover {
+  background: #e6f0fb;
+  border: 1px solid #b6d0ee;
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.mf-field.is-locked .mf-field-icon {
+  background: rgba(37, 99, 235, 0.12);
+  color: #3b6fb6;
+}
+
+.mf-field.is-locked .mf-field-input {
+  cursor: not-allowed;
+  -webkit-text-fill-color: #3f5878;
+  color: #3f5878;
+}
+
+/* red star after a required field's label */
+.mf-required {
+  color: var(--bs-danger);
+  font-weight: 700;
+}
+
+/* callout under a locked field */
+.mf-locked-note {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.4rem 0 0 0.35rem;
+  color: #2f5ea8;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.mf-locked-note svg {
+  flex-shrink: 0;
+}
+
+.mf-field-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  margin-right: 0.25rem;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #2f5ea8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
 .mf-field-icon {
   display: flex;
   align-items: center;
@@ -285,8 +347,12 @@ a {
 .mf-field-input:-webkit-autofill:hover,
 .mf-field-input:-webkit-autofill:focus,
 .mf-field-input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px var(--bs-body-bg) inset !important;
-  box-shadow: 0 0 0 1000px var(--bs-body-bg) inset !important;
+  /* No inset fill: it painted a solid rectangle over the rounded field.
+     The long background-color transition below hides the UA tint instead. */
+  -webkit-box-shadow: none !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+  background-clip: content-box;
   -webkit-text-fill-color: var(--bs-body-color) !important;
   caret-color: var(--bs-body-color);
   transition: background-color 600000s 0s, color 600000s 0s;
@@ -2741,6 +2807,246 @@ a {
   transform: translateY(-1px);
 }
 
+/* permission checklist in the role drawer */
+/* The drawer body is a flex column, so the search box must not flex (it would stretch tall). */
+.mf-permpick-search {
+  position: sticky;
+  top: -1.25rem;
+  z-index: 1;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.6rem;
+  height: 46px;
+  margin: -0.25rem 0 -0.4rem;
+  padding: 0 0.6rem 0 0.9rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background: #fafafa;
+  transition: border-color 0.15s ease, background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.mf-permpick-search:focus-within {
+  border-color: var(--mf-accent);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+}
+
+.mf-permpick-search-icon {
+  flex-shrink: 0;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.mf-permpick-search:focus-within .mf-permpick-search-icon {
+  color: var(--mf-accent);
+}
+
+.mf-permpick-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 0.92rem;
+  color: var(--bs-body-color);
+}
+
+.mf-permpick-search-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.07);
+  color: rgba(0, 0, 0, 0.6);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.mf-permpick-search-clear:hover {
+  background: rgba(0, 0, 0, 0.14);
+  color: #000;
+}
+
+.mf-permpick-group {
+  flex: none;
+}
+
+.mf-permpick-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.mf-permpick-all {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--mf-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.mf-permpick-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  background: #fafafa;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.mf-permpick-item:hover,
+.mf-permpick-item:has(input:checked) {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.mf-permpick-item input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--mf-accent);
+}
+
+.mf-permpick-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.mf-permpick-text small {
+  color: var(--bs-secondary-color);
+}
+
+/* delete confirmation modal */
+.mf-confirm-dialog {
+  max-width: 400px;
+}
+
+.mf-confirm {
+  border: none;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+}
+
+.mf-confirm-body {
+  padding: 2rem 1.75rem 1.5rem;
+  text-align: center;
+}
+
+.mf-confirm-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 1rem;
+  border-radius: 50%;
+  background: rgba(234, 88, 12, 0.12);
+  color: #ea580c;
+  box-shadow: 0 0 0 8px rgba(234, 88, 12, 0.06);
+}
+
+.mf-confirm-title {
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.mf-confirm-message {
+  margin-bottom: 1.5rem;
+  color: var(--bs-secondary-color);
+  font-size: 0.925rem;
+  word-break: break-word;
+}
+
+.mf-confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.mf-confirm-btn {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bs-body-color);
+  font-weight: 600;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.mf-confirm-btn:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.mf-confirm-btn:disabled {
+  opacity: 0.6;
+}
+
+.mf-confirm-btn.is-danger {
+  border-color: #ea580c;
+  background: #ea580c;
+  color: #fff;
+}
+
+.mf-confirm-btn.is-danger:hover:not(:disabled) {
+  background: #c2410c;
+  border-color: #c2410c;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);
+}
+
+.mf-confirm-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.3);
+}
+
+/* keep a row's action buttons on one line */
+.mf-row-actions {
+  white-space: nowrap;
+}
+
+/* gap between neighbouring row actions (e.g. edit + delete) */
+.mf-row-action + .mf-row-action {
+  margin-left: 0.5rem;
+}
+
+/* destructive variant (delete) */
+.mf-row-action.is-danger {
+  color: #ea580c;
+  border-color: rgba(234, 88, 12, 0.3);
+  background: rgba(234, 88, 12, 0.08);
+}
+
+.mf-row-action.is-danger:hover {
+  background: #ea580c;
+  border-color: #ea580c;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3);
+}
+
+.mf-row-action.is-danger:focus-visible {
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.3);
+}
+
+/* the row action whose sub list is open */
+.mf-row-action.is-active {
+  background: var(--mf-accent);
+  border-color: var(--mf-accent);
+  color: #fff;
+}
+
 .mf-row-action:active {
   transform: translateY(0) scale(0.95);
   box-shadow: none;
@@ -2804,6 +3110,42 @@ a {
 .mf-mc-badge.is-active {
   background: rgba(22, 163, 74, 0.12);
   color: #15803d;
+}
+
+/* permission scope badge */
+.mf-scope-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.65rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.mf-scope-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.mf-scope-badge.is-platform {
+  background: rgba(217, 119, 6, 0.1);
+  border-color: rgba(217, 119, 6, 0.28);
+  color: #b45309;
+}
+
+.mf-scope-badge.is-tenant {
+  background: rgba(13, 148, 136, 0.1);
+  border-color: rgba(13, 148, 136, 0.28);
+  color: #0f766e;
 }
 
 /* clickable category rows */

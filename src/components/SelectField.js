@@ -37,6 +37,7 @@ export default function SelectField({
   error,
   hint,
   disabled = false,
+  required = false,
   placeholder = "Select…",
 }) {
   const selected = options.find((option) => option.value === value);
@@ -62,7 +63,10 @@ export default function SelectField({
         >
           {icon && <span className="mf-field-icon">{icon}</span>}
           <span className="mf-field-body">
-            <span className="mf-select-label">{label}</span>
+            <span className="mf-select-label">
+              {label}
+              {required && <span className="mf-required"> *</span>}
+            </span>
             <span className={`mf-select-value${selected ? "" : " is-placeholder"}`}>
               {selected ? selected.label : placeholder}
             </span>
