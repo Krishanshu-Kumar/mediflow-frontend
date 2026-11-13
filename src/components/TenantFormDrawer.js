@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Offcanvas } from "react-bootstrap";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { FiAlertCircle, FiHome, FiLayers, FiLink, FiX } from "react-icons/fi";
+import { FiAlertCircle, FiHome, FiInfo, FiLayers, FiLink, FiLock, FiX } from "react-icons/fi";
 import SelectField from "@/components/SelectField";
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -150,15 +150,47 @@ export default function TenantFormDrawer({ show, tenant, plans, saving, onHide, 
             formik={formik}
             onChange={handleNameChange}
           />
-          <Field
-            id="tenant-slug"
-            name="slug"
-            label="Slug"
-            icon={<FiLink size={17} />}
-            formik={formik}
-            onChange={handleSlugChange}
-            hint={`Staff sign in at /${formik.values.slug || "your-slug"}/login`}
-          />
+          {isEdit ? (
+            <div className="mf-field-group">
+              <div className="mf-field is-locked" title="The slug can't be changed once set.">
+                <span className="mf-field-icon">
+                  <FiLink size={17} />
+                </span>
+                <div className="mf-field-body">
+                  <input
+                    id="tenant-slug"
+                    type="text"
+                    className="mf-field-input"
+                    placeholder=" "
+                    value={formik.values.slug}
+                    disabled
+                    readOnly
+                  />
+                  <label htmlFor="tenant-slug" className="mf-field-label">
+                    Slug
+                  </label>
+                </div>
+                <span className="mf-field-lock">
+                  <FiLock size={12} />
+                  Locked
+                </span>
+              </div>
+              <p className="mf-locked-note">
+                <FiInfo size={13} />
+                <span>Slug can&apos;t be edited once added.</span>
+              </p>
+            </div>
+          ) : (
+            <Field
+              id="tenant-slug"
+              name="slug"
+              label="Slug"
+              icon={<FiLink size={17} />}
+              formik={formik}
+              onChange={handleSlugChange}
+              hint={`Staff sign in at /${formik.values.slug || "your-slug"}/login`}
+            />
+          )}
           <SelectField
             id="tenant-plan"
             label="Plan"

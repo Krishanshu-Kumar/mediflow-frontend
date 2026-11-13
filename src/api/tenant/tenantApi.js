@@ -14,9 +14,9 @@ export const getTenant = (tenantId) => api.get(`/tenants/${tenantId}`);
 export const createTenant = ({ name, slug, planCode }) =>
   api.post("/tenants/", { name, slug, plan_code: planCode });
 
-/** PUT /tenants/{id}: partial update of { name, slug, plan_code }. */
-export const updateTenant = (tenantId, { name, slug, planCode }) =>
-  api.put(`/tenants/${tenantId}`, { name, slug, plan_code: planCode });
+/** PUT /tenants/{id}: partial update of { name, plan_code }. The slug can't change once set. */
+export const updateTenant = (tenantId, { name, planCode }) =>
+  api.put(`/tenants/${tenantId}`, { name, plan_code: planCode });
 
 export const setTenantStatus = (tenantId, isActive) =>
   api.patch(`/tenants/${tenantId}/status`, undefined, { params: { is_active: isActive } });
