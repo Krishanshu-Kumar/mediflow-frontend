@@ -3236,3 +3236,818 @@ a {
   border-bottom: none;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
+/* ---------- Medical staff: tab bar, user list + details (app/admin/medical-staff/page.js) ---------- */
+
+.mf-staff-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+
+/* the profile header and the tabs form one block; tabs are underline tabs along its bottom edge */
+.mf-staff-head {
+  flex-shrink: 0;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(44, 210, 203, 0.16), transparent 55%),
+    linear-gradient(180deg, #f6f8ff, #fff);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.mf-staff-tabs {
+  --mf-tab-gap: 0rem;
+  --mf-tab-pad: 0rem;
+  position: relative;
+  display: flex;
+  gap: 0;
+  padding: 0 0.75rem;
+}
+
+/* the gradient pill that slides under the active tab */
+/* the gradient underline that slides under the active tab */
+.mf-staff-tabs-indicator {
+  position: absolute;
+  bottom: -1px;
+  left: 0.75rem;
+  height: 3px;
+  width: calc((100% - 1.5rem) / var(--n));
+  transform: translateX(calc(var(--i) * 100%));
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(90deg, #5fe3dd, #2cd2cb 50%, #20bfb9);
+  box-shadow: 0 -4px 14px rgba(23, 184, 178, 0.45);
+  transition: transform 0.35s cubic-bezier(0.34, 1.3, 0.5, 1);
+  pointer-events: none;
+}
+
+.mf-staff-more {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.mf-staff-more .dropdown-toggle::after {
+  display: none;
+}
+
+/* every tab takes an equal share of the bar, however many there are */
+/* every tab takes an equal share of the bar, however many there are */
+.mf-staff-tab {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.95rem 0.75rem;
+  border: 0;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+  font-size: 0.88rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: rgba(15, 23, 42, 0.55);
+  transition: color 0.25s, background 0.2s;
+}
+
+.mf-staff-tab > svg {
+  flex: none;
+  transition: transform 0.25s;
+}
+
+/* inactive hover */
+.mf-staff-tab:hover:not(.is-active) {
+  background: rgba(23, 184, 178, 0.05);
+  color: #1e293b;
+}
+
+.mf-staff-tab:hover > svg {
+  transform: translateY(-1px) scale(1.12);
+}
+
+/* active tab */
+.mf-staff-tab.is-active {
+  color: #17b8b2;
+}
+
+.mf-staff-tab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(44, 210, 203, 0.35);
+}
+
+.mf-staff {
+  display: grid;
+  grid-template-columns: minmax(260px, 330px) 1fr;
+  gap: 1.25rem;
+  height: 100%;
+  min-height: 0;
+}
+
+
+.mf-staff-construction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 3rem 1.75rem;
+  text-align: center;
+}
+
+.mf-staff-construction-icon {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 0.5rem;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.14);
+  color: #d97706;
+}
+
+.mf-staff-construction h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.mf-staff-construction p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- Medical staff: details card ---------- */
+
+.mf-staff-detail {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: #fff;
+}
+
+.mf-staff-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  padding: 1.75rem 1.75rem;
+}
+
+.mf-staff-hero-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 6rem;
+  height: 6rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5fe3dd, #2cd2cb 55%, #20bfb9);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 700;
+  box-shadow: 0 12px 24px -10px rgba(23, 184, 178, 0.7);
+}
+
+.mf-staff-hero-avatar.is-off {
+  background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+  box-shadow: none;
+}
+
+.mf-staff-hero-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.mf-staff-hero-text h3 {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.mf-staff-hero-text p {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0 0;
+  font-size: 0.86rem;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.mf-staff-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.38rem 0.95rem 0.38rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* the dot: a solid core, and for active a ring that pulses outward */
+.mf-staff-pill i {
+  position: relative;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.mf-staff-pill.is-on {
+  background: linear-gradient(135deg, rgba(95, 227, 221, 0.22), rgba(44, 210, 203, 0.12));
+  border-color: rgba(44, 210, 203, 0.45);
+  color: #0e7a76;
+  box-shadow: 0 6px 14px -8px rgba(44, 210, 203, 0.8);
+}
+
+.mf-staff-pill.is-on i {
+  background: #2cd2cb;
+}
+
+.mf-staff-pill.is-on i::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #2cd2cb;
+  animation: mf-staff-pulse 1.8s ease-out infinite;
+}
+
+.mf-staff-pill.is-off {
+  background: rgba(100, 116, 139, 0.1);
+  border-color: rgba(100, 116, 139, 0.25);
+  color: #64748b;
+}
+
+@keyframes mf-staff-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.65;
+  }
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-staff-pill.is-on i::after {
+    animation: none;
+  }
+}
+
+.mf-staff-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem 1.75rem;
+}
+
+.mf-staff-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.9rem;
+}
+
+.mf-staff-stat {
+  --tone: 23, 184, 178;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.75rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(var(--tone), 0.08);
+  color: rgb(var(--tone));
+}
+
+.mf-staff-stat.is-green {
+  --tone: 23, 184, 178;
+}
+
+.mf-staff-stat.is-slate {
+  --tone: 100, 116, 139;
+}
+
+.mf-staff-stat.is-violet {
+  --tone: 6, 182, 212;
+}
+
+.mf-staff-stat svg {
+  grid-row: span 2;
+  box-sizing: content-box;
+  padding: 0.55rem;
+  border-radius: 10px;
+  background: rgba(var(--tone), 0.14);
+}
+
+.mf-staff-stat span {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.mf-staff-stat strong {
+  font-size: 0.98rem;
+  color: #0f172a;
+}
+
+.mf-staff-sections {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.mf-staff-section {
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.mf-staff-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.8rem 1.1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.6);
+}
+
+.mf-staff-section dl {
+  margin: 0;
+}
+
+.mf-staff-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+}
+
+.mf-staff-row + .mf-staff-row {
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.mf-staff-row dt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.mf-staff-row dd {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+  color: #0f172a;
+}
+
+@media (max-width: 768px) {
+  .mf-staff {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .mf-staff-hero {
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------- Medical staff: user list panel ---------- */
+
+.mf-staff-list-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  overflow: hidden;
+}
+
+.mf-staff-list-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem 1.15rem 0.9rem;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+  background: linear-gradient(180deg, #f8faff, #fff);
+}
+
+.mf-staff-list-head h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.mf-staff-count {
+  min-width: 1.7rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(44, 210, 203, 0.1);
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #17b8b2;
+}
+
+.mf-staff-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0.6rem;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.mf-staff-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  text-align: left;
+  transition: background 0.18s, border-color 0.18s, box-shadow 0.18s, transform 0.18s;
+}
+
+.mf-staff-item:hover {
+  background: #f4f7fc;
+}
+
+.mf-staff-item.is-active {
+  background: linear-gradient(135deg, rgba(44, 210, 203, 0.09), rgba(32, 191, 185, 0.07));
+  border-color: rgba(23, 184, 178, 0.22);
+  box-shadow: 0 8px 18px -12px rgba(23, 184, 178, 0.55);
+}
+
+.mf-staff-item.is-active::before {
+  content: "";
+  position: absolute;
+  left: -0.6rem;
+  top: 24%;
+  bottom: 24%;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #5fe3dd, #20bfb9);
+}
+
+.mf-staff-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(44, 210, 203, 0.3);
+}
+
+.mf-staff-avatar {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 3.4rem;
+  height: 3.4rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5fe3dd, #2cd2cb 55%, #20bfb9);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  box-shadow: 0 6px 12px -6px rgba(23, 184, 178, 0.6);
+}
+
+.mf-staff-avatar.is-off {
+  background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+  box-shadow: none;
+}
+
+.mf-staff-avatar::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+.mf-staff-avatar.is-off::after {
+  background: #94a3b8;
+}
+
+.mf-staff-item-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.mf-staff-item-name,
+.mf-staff-item-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mf-staff-item-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.mf-staff-item-sub {
+  font-size: 0.78rem;
+  color: rgba(15, 23, 42, 0.5);
+}
+
+.mf-staff-item-role {
+  align-self: flex-start;
+  max-width: 100%;
+  margin-top: 0.15rem;
+  padding: 0.1rem 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: rgba(44, 210, 203, 0.09);
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #17b8b2;
+}
+
+.mf-staff-item-chevron {
+  flex: none;
+  color: rgba(15, 23, 42, 0.25);
+  transition: transform 0.18s, color 0.18s;
+}
+
+.mf-staff-item:hover .mf-staff-item-chevron,
+.mf-staff-item.is-active .mf-staff-item-chevron {
+  transform: translateX(2px);
+  color: #17b8b2;
+}
+
+.mf-staff-list-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* search is a pill built into the panel header: gradient icon chip, live count, clear button */
+.mf-staff-search {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 2.75rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.3rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  box-shadow: 0 2px 6px -3px rgba(15, 23, 42, 0.18);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.mf-staff-search:focus-within {
+  border-color: rgba(23, 184, 178, 0.6);
+  box-shadow: 0 0 0 4px rgba(23, 184, 178, 0.12), 0 6px 14px -8px rgba(23, 184, 178, 0.5);
+}
+
+.mf-staff-search-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.05rem;
+  height: 2.05rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5fe3dd, #2cd2cb 55%, #20bfb9);
+  color: #fff;
+  box-shadow: 0 6px 12px -6px rgba(23, 184, 178, 0.7);
+}
+
+.mf-staff-search input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.mf-staff-search input::placeholder {
+  color: rgba(15, 23, 42, 0.4);
+}
+
+.mf-staff-search-count {
+  flex: none;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(23, 184, 178, 0.1);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #17b8b2;
+}
+
+.mf-staff-search-clear {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.07);
+  color: rgba(15, 23, 42, 0.55);
+  transition: background 0.15s, color 0.15s;
+}
+
+.mf-staff-search-clear:hover {
+  background: rgba(15, 23, 42, 0.14);
+  color: #0f172a;
+}
+
+.mf-staff-list-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: rgba(15, 23, 42, 0.5);
+}
+
+/* Medical staff: three filters share the header row, so the status one is narrower */
+.mf-staff-filters-wrap,
+.mf-roles-filters {
+  flex-wrap: wrap;
+}
+
+.mf-header-select.mf-header-select--sm {
+  width: 200px;
+}
+
+/* readable dark green on the light green tints */
+.mf-staff-tab.is-active,
+.mf-staff-count,
+.mf-staff-item-role,
+.mf-staff-search-count {
+  color: #0e7a76;
+}
+
+/* white initials stay legible on the lighter turquoise */
+.mf-staff-avatar,
+.mf-staff-hero-avatar,
+.mf-staff-search-icon {
+  text-shadow: 0 1px 2px rgba(10, 80, 76, 0.35);
+}
+
+/* header status capsule: icon chip + caption + value */
+.mf-staff-status {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.4rem 1.1rem 0.4rem 0.4rem;
+  border: 1px solid rgba(44, 210, 203, 0.4);
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(95, 227, 221, 0.2), rgba(255, 255, 255, 0.9));
+  box-shadow: 0 10px 22px -14px rgba(44, 210, 203, 0.9);
+}
+
+.mf-staff-status-icon {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5fe3dd, #2cd2cb 55%, #20bfb9);
+  color: #fff;
+  box-shadow: 0 6px 12px -6px rgba(32, 191, 185, 0.9);
+}
+
+/* soft ring that breathes around the icon while the user is active */
+.mf-staff-status.is-on .mf-staff-status-icon::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border: 2px solid rgba(44, 210, 203, 0.5);
+  border-radius: 50%;
+  animation: mf-staff-ring 2s ease-out infinite;
+}
+
+.mf-staff-status-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.mf-staff-status-text span {
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.45);
+}
+
+.mf-staff-status-text strong {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0e7a76;
+}
+
+.mf-staff-status.is-off {
+  border-color: rgba(100, 116, 139, 0.3);
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.16), rgba(255, 255, 255, 0.9));
+  box-shadow: none;
+}
+
+.mf-staff-status.is-off .mf-staff-status-icon {
+  background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+  box-shadow: none;
+}
+
+.mf-staff-status.is-off .mf-staff-status-text strong {
+  color: #64748b;
+}
+
+@keyframes mf-staff-ring {
+  from {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mf-staff-status.is-on .mf-staff-status-icon::after {
+    animation: none;
+  }
+}
+
+/* Medical staff: turquoise scrollbars for the two scrolling panels (this page only) */
+.mf-staff-list,
+.mf-staff-detail {
+  scrollbar-width: thin;
+  scrollbar-color: #2cd2cb transparent;
+}
+
+.mf-staff-list::-webkit-scrollbar,
+.mf-staff-detail::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mf-staff-list::-webkit-scrollbar-track,
+.mf-staff-detail::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mf-staff-list::-webkit-scrollbar-thumb,
+.mf-staff-detail::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #5fe3dd, #2cd2cb 55%, #20bfb9) padding-box;
+}
+
+.mf-staff-list::-webkit-scrollbar-thumb:hover,
+.mf-staff-detail::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2cd2cb, #17b8b2) padding-box;
+}
