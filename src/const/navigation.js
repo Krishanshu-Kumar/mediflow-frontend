@@ -1,4 +1,4 @@
-import { FiKey, FiLayers, FiList, FiSettings, FiShield, FiUserPlus, FiUsers } from "react-icons/fi";
+import { FiCalendar, FiKey, FiLayers, FiList, FiSettings, FiShield, FiUserPlus, FiUsers } from "react-icons/fi";
 
 // Each item: { key, label, icon, children?: [{ key, label, icon, color, href? }] }
 export const NAV_SECTIONS = [
@@ -11,6 +11,7 @@ export const NAV_SECTIONS = [
       { key: "master-codes", label: "Master Codes", icon: FiList, color: "#7c3aed", href: "/admin/master-codes" },
       { key: "roles", label: "Roles", icon: FiShield, color: "#e11d48", href: "/admin/roles" },
       { key: "permissions", label: "Permissions", icon: FiKey, color: "#d97706", href: "/admin/permissions" },
+      { key: "financial-year", label: "Financial Year", icon: FiCalendar, color: "#0891b2", href: "/admin/financial-year" },
     ],
   },
   {

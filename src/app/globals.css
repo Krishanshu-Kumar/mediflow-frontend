@@ -2602,6 +2602,14 @@ a {
   letter-spacing: 0.02em;
 }
 
+/* date inputs always show a mm/dd/yyyy mask, so keep their label floated */
+.mf-tenant-form .mf-field-input[type="date"] ~ .mf-field-label {
+  top: 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .mf-tenant-form .mf-field-alert {
   transform: none;
   margin-right: 0;
@@ -3146,6 +3154,27 @@ a {
   background: rgba(13, 148, 136, 0.1);
   border-color: rgba(13, 148, 136, 0.28);
   color: #0f766e;
+}
+
+/* financial year label badge (app/admin/financial-year/page.js) */
+.mf-fy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid rgba(8, 145, 178, 0.3);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, rgba(8, 145, 178, 0.14), rgba(37, 99, 235, 0.1));
+  color: #0e7490;
+}
+
+.mf-fy-badge svg {
+  flex-shrink: 0;
 }
 
 /* clickable category rows */
