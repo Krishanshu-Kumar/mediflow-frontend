@@ -1,4 +1,5 @@
-import { FiCalendar, FiKey, FiLayers, FiList, FiSettings, FiShield, FiUserPlus, FiUsers } from "react-icons/fi";
+import { FaGavel } from "react-icons/fa";
+import { FiCalendar, FiFileText, FiKey, FiLayers, FiList, FiSettings, FiShield, FiUserPlus, FiUsers } from "react-icons/fi";
 
 // Each item: { key, label, icon, children?: [{ key, label, icon, color, href? }] }
 export const NAV_SECTIONS = [
@@ -20,6 +21,14 @@ export const NAV_SECTIONS = [
     icon: FiUsers,
     children: [
       { key: "medical-staff", label: "Medical staff", icon: FiUserPlus, color: "#2563eb", href: "/admin/medical-staff" },
+    ],
+  },
+  {
+    key: "tenders",
+    label: "Tenders",
+    icon: FaGavel,
+    children: [
+      { key: "all-tenders", label: "All Tenders", icon: FiFileText, color: "#9333ea", href: "/admin/tenders" },
     ],
   },
 ];

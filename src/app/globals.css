@@ -1849,7 +1849,16 @@ a {
   box-shadow: 0 8px 18px -6px rgba(37, 99, 235, 0.6),
     0 2px 4px -2px rgba(37, 99, 235, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.28);
-  transition: background-position 0.3s ease;
+  transition: background-position 0.3s ease, transform 0.12s ease, box-shadow 0.12s ease,
+    filter 0.12s ease;
+}
+
+/* click: subtle press effect (slight shrink, dimmer, softer shadow) */
+.mf-page-card-btn--add:active {
+  transform: scale(0.97);
+  filter: brightness(0.95);
+  box-shadow: 0 3px 8px -4px rgba(37, 99, 235, 0.55),
+    inset 0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 /* soft top sheen so it reads as raised glass rather than a flat fill */

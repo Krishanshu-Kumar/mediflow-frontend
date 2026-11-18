@@ -40,7 +40,7 @@ const slugify = (text) =>
     .slice(0, 100);
 
 /** One floating-label field, styled like the login form. */
-export function Field({ id, name, label, icon, formik, onChange, hint, maxLength, required, type = "text" }) {
+export function Field({ id, name, label, icon, formik, onChange, hint, maxLength, required, type = "text", min }) {
   const showError = (formik.touched[name] || formik.submitCount > 0) && formik.errors[name];
 
   return (
@@ -59,6 +59,7 @@ export function Field({ id, name, label, icon, formik, onChange, hint, maxLength
             autoComplete="off"
             spellCheck="false"
             maxLength={maxLength}
+            min={min}
             className="mf-field-input"
           />
           <label htmlFor={id} className="mf-field-label">

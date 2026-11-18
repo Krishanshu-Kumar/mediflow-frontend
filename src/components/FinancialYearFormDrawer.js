@@ -130,6 +130,7 @@ export default function FinancialYearFormDrawer({ show, financialYear, saving, o
             name="endDate"
             label="End date"
             type="date"
+            min={formik.values.startDate || undefined}
             required
             icon={<FiCalendar size={17} />}
             formik={formik}
