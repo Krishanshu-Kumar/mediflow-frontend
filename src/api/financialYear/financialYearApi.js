@@ -1,12 +1,21 @@
 import api from "../global/apiHelper";
+import { fetchLimit, toPage } from "../global/paged";
 import useApi from "../global/useApi";
 
 // The token is attached by the apiHelper interceptor.
 // A financial year looks like { id, label: "2026-27", start_date, end_date, is_active, created_at, updated_at }.
 
-/** GET /financial-years/ — array of financial years. Optional: skip, limit, activeOnly. */
-export const getFinancialYears = ({ skip, limit, activeOnly } = {}) =>
-  api.get("/financial-years/", { params: { skip, limit, active_only: activeOnly } });
+/**
+ * GET /financial-years/ — one page as { items, hasNext } (the backend sends a plain array with
+ * no total). Optional: skip, limit (max 500), activeOnly (the backend defaults it to true).
+ */
+export const getFinancialYears = async ({ skip = 0, limit = 10, activeOnly } = {}) =>
+  toPage(
+    await api.get("/financial-years/", {
+      params: { skip, limit: fetchLimit(limit), active_only: activeOnly },
+    }),
+    limit,
+  );
 
 /** GET /financial-years/{id}. */
 export const getFinancialYear = (id) => api.get(`/financial-years/${id}`);

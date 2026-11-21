@@ -8,7 +8,7 @@ import {
   useCreateTenant,
   usePlans,
   useSetTenantStatus,
-  useTenants,
+  useTenantsPage,
   useUpdateTenant,
 } from "@/api/tenant/tenantApi";
 import FilterDrawer, { FilterGroup } from "@/components/FilterDrawer";
@@ -36,6 +36,7 @@ export default function Tenants() {
   const [filters, setFilters] = useState(NO_FILTERS);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [tenants, setTenants] = useState([]);
+  const [hasNext, setHasNext] = useState(false);
   const [plans, setPlans] = useState([]);
   const [loadError, setLoadError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -43,25 +44,27 @@ export default function Tenants() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState(null);
   const toast = useToast();
-  const { call: fetchTenants, loading: tenantsLoading } = useTenants();
+  const { call: fetchTenants, loading: tenantsLoading } = useTenantsPage();
   const { call: fetchPlans, loading: plansLoading } = usePlans();
   const { call: saveTenantStatus, loading: statusSaving } = useSetTenantStatus();
   const { call: createTenant, loading: creating } = useCreateTenant();
   const { call: updateTenant, loading: updating } = useUpdateTenant();
 
-  // The API has no search or total count, so load every tenant (active and inactive) once
-  // and search / filter / page here.
+  // The backend does the paging (and the active-only filter); load just the current page.
+  // Inactive tenants are included unless the Active status filter is on.
+  const activeOnly = filters.status === "active";
   useEffect(() => {
-    fetchTenants({ activeOnly: false })
-      .then((data) => {
-        setTenants(data);
+    fetchTenants({ skip: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE, activeOnly })
+      .then(({ items, hasNext: more }) => {
+        setTenants(items);
+        setHasNext(more);
         setLoadError(null);
       })
       .catch((err) => {
         setLoadError(err.message);
         toast.error(err.message, { title: "Couldn't load tenants" });
       });
-  }, [fetchTenants, toast, reloadKey]);
+  }, [fetchTenants, toast, page, activeOnly, reloadKey]);
 
   useEffect(() => {
     fetchPlans()
@@ -86,6 +89,8 @@ export default function Tenants() {
     ...plans.map((plan) => ({ value: plan.code, label: plan.display_name })),
   ];
 
+  // The API has no search, plan or inactive-only filter, so those apply to the tenants on the
+  // current page here.
   const term = query.trim().toLowerCase();
   const isSearching = term !== "";
   const activeFilterCount = Object.values(filters).filter((value) => value !== "all").length;
@@ -95,9 +100,7 @@ export default function Tenants() {
       (filters.status === "all" || tenant.is_active === (filters.status === "active")) &&
       (filters.plan === "all" || tenant.plan_code === filters.plan) &&
       (!isSearching ||
-        [tenant.name, tenant.slug].some((value) =>
-          value.toLowerCase().includes(term),
-        )),
+        [tenant.name, tenant.slug].some((value) => value.toLowerCase().includes(term))),
   );
 
   const updateFilter = (key) => (value) => {
@@ -109,13 +112,6 @@ export default function Tenants() {
     setFilters(NO_FILTERS);
     setPage(1);
   };
-
-  const pageCount = Math.max(1, Math.ceil(visibleTenants.length / PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount);
-  const pagedTenants = visibleTenants.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
-  );
 
   const handleQueryChange = (event) => {
     setQuery(event.target.value);
@@ -144,7 +140,11 @@ export default function Tenants() {
         toast.success(`${updated.name} was updated.`, { title: "Tenant updated" });
       } else {
         const created = await createTenant(values);
-        setTenants((prev) => [created, ...prev]);
+        // Clear the search and filters so the new tenant is visible, then reload.
+        setQuery("");
+        setFilters(NO_FILTERS);
+        setPage(1);
+        setReloadKey((key) => key + 1);
         toast.success(`${created.name} was added.`, { title: "Tenant added" });
       }
       return true;
@@ -163,13 +163,14 @@ export default function Tenants() {
     <AdminShell title="Tenants" breadcrumbs={getBreadcrumbs("management", "tenants")}>
       <Loader show={tenantsLoading || plansLoading || statusSaving || creating || updating} />
       <PageCard
-            scrollResetKey={currentPage}
+            scrollResetKey={page}
             footer={
-              visibleTenants.length > 0 && (
+              tenants.length > 0 && (
                 <Pagination
-                  page={currentPage}
+                  page={page}
                   pageSize={PAGE_SIZE}
-                  total={visibleTenants.length}
+                  count={tenants.length}
+                  hasNext={hasNext}
                   onPageChange={setPage}
                 />
               )
@@ -218,7 +219,7 @@ export default function Tenants() {
           >
             {visibleTenants.length > 0 ? (
               <div className="mf-tenant-grid">
-                {pagedTenants.map((tenant) => (
+                {visibleTenants.map((tenant) => (
                   <TenantCard
                     key={tenant.id}
                     tenant={tenant}
@@ -272,7 +273,7 @@ export default function Tenants() {
         onOpenChange={setFiltersOpen}
         activeCount={activeFilterCount}
         onReset={resetFilters}
-        resultText={`${visibleTenants.length} of ${tenants.length} tenants`}
+        resultText={`${visibleTenants.length} of ${tenants.length} tenants on this page`}
       >
         <FilterGroup
           label="Status"

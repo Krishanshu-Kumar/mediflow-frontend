@@ -1,10 +1,22 @@
 import api from "../global/apiHelper";
+import { fetchLimit, toPage } from "../global/paged";
 import useApi from "../global/useApi";
 import { getMasterCodes } from "../masterCode/masterCodeApi";
 
 // All /tenants routes require a Super Admin token (attached by the apiHelper interceptor).
 
-/** GET /tenants/ — a plain array; the backend has no search or total count yet. */
+/**
+ * GET /tenants/ — one page of tenants as { items, hasNext } (the backend sends a plain array
+ * with no total). It only filters by `activeOnly`; search and the other filters are not
+ * supported by the backend.
+ */
+export const getTenantsPage = async ({ skip = 0, limit = 10, activeOnly = false } = {}) =>
+  toPage(
+    await api.get("/tenants/", { params: { skip, limit: fetchLimit(limit), active_only: activeOnly } }),
+    limit,
+  );
+
+/** GET /tenants/ — a plain array (up to `limit`, max 500), for dropdowns that need them all. */
 export const getTenants = ({ skip = 0, limit = 500, activeOnly = false } = {}) =>
   api.get("/tenants/", { params: { skip, limit, active_only: activeOnly } });
 
@@ -28,6 +40,7 @@ export const getPlans = () => getMasterCodes({ categoryCode: PLAN_CATEGORY });
 
 // One hook per API: returns { call, loading } so the page can show <Loader show={loading} />.
 export const useTenants = () => useApi(getTenants);
+export const useTenantsPage = () => useApi(getTenantsPage);
 export const useTenant = () => useApi(getTenant);
 export const useCreateTenant = () => useApi(createTenant);
 export const useUpdateTenant = () => useApi(updateTenant);

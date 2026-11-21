@@ -15,8 +15,58 @@ function getPageItems(page, pageCount) {
   return pages.flatMap((n, i) => (i > 0 && n - pages[i - 1] > 1 ? ["…", n] : [n]));
 }
 
-/** "Showing 1–6 of 14" on the left; first / previous / numbered / next / last on the right. */
-export default function Pagination({ page, pageSize, total, onPageChange }) {
+/**
+ * "Showing 1–6 of 14" on the left; first / previous / numbered / next / last on the right.
+ *
+ * When the total isn't known (the backend pages with skip/limit but doesn't count), leave
+ * `total` out and pass `count` (rows on this page) and `hasNext` instead: it shows
+ * "Showing 11–20" with just previous / current page / next.
+ */
+export default function Pagination({ page, pageSize, total, count = 0, hasNext = false, onPageChange }) {
+  if (total == null) {
+    const from = count === 0 ? 0 : (page - 1) * pageSize + 1;
+    const to = count === 0 ? 0 : from + count - 1;
+    return (
+      <div className="mf-pagination">
+        <span className="mf-pagination-summary">
+          Showing {from}–{to}
+        </span>
+        {(page > 1 || hasNext) && (
+          <nav className="mf-pagination-nav" aria-label="Pagination">
+            <button
+              type="button"
+              className="mf-pagination-btn"
+              onClick={() => onPageChange(page - 1)}
+              disabled={page === 1}
+              aria-label="Previous page"
+              title="Previous page"
+            >
+              <FiChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              className="mf-pagination-btn is-active"
+              aria-label={`Page ${page}`}
+              aria-current="page"
+            >
+              {page}
+            </button>
+            <button
+              type="button"
+              className="mf-pagination-btn"
+              onClick={() => onPageChange(page + 1)}
+              disabled={!hasNext}
+              aria-label="Next page"
+              title="Next page"
+            >
+              <FiChevronRight size={16} />
+            </button>
+          </nav>
+        )}
+      </div>
+    );
+  }
+
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const from = total === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, total);
