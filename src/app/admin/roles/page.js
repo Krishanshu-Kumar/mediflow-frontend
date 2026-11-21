@@ -50,7 +50,7 @@ const PAGE_SIZE = 10;
 
 export default function RolesPage() {
   const [roles, setRoles] = useState([]);
-  const [total, setTotal] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
   const [tenants, setTenants] = useState([]);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -146,9 +146,9 @@ export default function RolesPage() {
       limit: PAGE_SIZE,
       tenantId: selectedTenantId,
     })
-      .then(({ items, total: count }) => {
+      .then(({ items, hasNext: more }) => {
         setRoles(items);
-        setTotal(count);
+        setHasNext(more);
         setLoadError(null);
       })
       .catch((err) => {
@@ -242,11 +242,12 @@ export default function RolesPage() {
       <PageCard
         scrollResetKey={page}
         footer={
-          total > 0 && (
+          roles.length > 0 && (
             <Pagination
               page={page}
               pageSize={PAGE_SIZE}
-              total={total}
+              count={roles.length}
+              hasNext={hasNext}
               onPageChange={setPage}
             />
           )

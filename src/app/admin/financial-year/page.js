@@ -26,6 +26,7 @@ const formatDate = (iso) =>
 
 export default function FinancialYearPage() {
   const [years, setYears] = useState([]);
+  const [hasNext, setHasNext] = useState(false);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [loadError, setLoadError] = useState(null);
@@ -38,25 +39,28 @@ export default function FinancialYearPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingYear, setEditingYear] = useState(null);
 
+  // The backend does the paging; load just the current page.
   useEffect(() => {
-    fetchYears()
-      .then((items) => {
-        setYears(Array.isArray(items) ? items : []);
+    fetchYears({ skip: (page - 1) * PAGE_SIZE, limit: PAGE_SIZE })
+      .then(({ items, hasNext: more }) => {
+        setYears(items);
+        setHasNext(more);
         setLoadError(null);
       })
       .catch((err) => {
         setLoadError(err.message);
         toast.error(err.message, { title: "Couldn't load financial years" });
       });
-  }, [fetchYears, toast, reloadKey]);
+  }, [fetchYears, toast, page, reloadKey]);
 
+  // The API has no search, so filter the financial years on the current page here.
   const term = query.trim().toLowerCase();
   const isSearching = term !== "";
-  const matching = years.filter((year) =>
+  const matchesSearch = (year) =>
     [year.label, year.start_date, year.end_date, formatDate(year.start_date), formatDate(year.end_date), year.is_active ? "active" : "inactive"].some(
       (value) => String(value ?? "").toLowerCase().includes(term),
-    ),
-  );
+    );
+  const matching = years.filter(matchesSearch);
   const handleStatusChange = async (year, isActive) => {
     try {
       const updated = await saveStatus(year.id, isActive);
@@ -103,15 +107,24 @@ export default function FinancialYearPage() {
     }
   };
 
-  // CSV of the financial years matching the search.
-  const exportCsv = () => {
-    if (matching.length === 0) {
+  // CSV of the financial years matching the search. The page only holds one page of rows, so
+  // this loads them all (up to the backend's 500 per request) first.
+  const exportCsv = async () => {
+    let all;
+    try {
+      ({ items: all } = await fetchYears({ skip: 0, limit: 500 }));
+    } catch (err) {
+      toast.error(err.message, { title: "Couldn't export financial years" });
+      return;
+    }
+    const exportable = all.filter(matchesSearch);
+    if (exportable.length === 0) {
       toast.info("There are no financial years to export.", { title: "Export" });
       return;
     }
     const cell = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
     const lines = [["Label", "Start date", "End date", "Current", "Status"]];
-    matching.forEach((year) =>
+    exportable.forEach((year) =>
       lines.push([
         year.label,
         formatDate(year.start_date),
@@ -136,11 +149,9 @@ export default function FinancialYearPage() {
     toast.info("Exporting financial years as PDF is coming soon.", { title: "Export" });
   };
 
-  const total = matching.length;
-  const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const currentPage = Math.min(page, lastPage);
-  const firstNumber = (currentPage - 1) * PAGE_SIZE;
-  const visibleYears = matching.slice(firstNumber, firstNumber + PAGE_SIZE);
+  const currentPage = page;
+  const firstNumber = (page - 1) * PAGE_SIZE;
+  const visibleYears = matching;
 
   const handleQueryChange = (event) => {
     setQuery(event.target.value);
@@ -160,8 +171,14 @@ export default function FinancialYearPage() {
       <PageCard
         scrollResetKey={currentPage}
         footer={
-          total > 0 && (
-            <Pagination page={currentPage} pageSize={PAGE_SIZE} total={total} onPageChange={setPage} />
+          years.length > 0 && (
+            <Pagination
+              page={currentPage}
+              pageSize={PAGE_SIZE}
+              count={years.length}
+              hasNext={hasNext}
+              onPageChange={setPage}
+            />
           )
         }
         actions={

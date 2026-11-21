@@ -115,7 +115,6 @@ const STAFF_TABS = [
 
 export default function MedicalStaffPage() {
   const [users, setUsers] = useState([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loadError, setLoadError] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -197,9 +196,8 @@ export default function MedicalStaffPage() {
       roleId: selectedRoleId,
       isActive: selectedIsActive,
     })
-      .then(({ items, total: count }) => {
+      .then(({ items }) => {
         setUsers(items);
-        setTotal(count);
         setLoadError(null);
       })
       .catch((err) => {
@@ -377,7 +375,7 @@ export default function MedicalStaffPage() {
                     <FiUsers size={15} />
                     Team members
                   </h4>
-                  <span className="mf-staff-count">{total}</span>
+                  <span className="mf-staff-count">{users.length}</span>
                 </div>
                 <div className="mf-staff-search">
                   <span className="mf-staff-search-icon">

@@ -1206,6 +1206,8 @@ a {
   gap: 0.6rem;
   height: 40px;
   width: 280px;
+  flex: 0 1 280px;
+  min-width: 0;
   max-width: 100%;
   padding: 0 0.7rem 0 0.4rem;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -3949,13 +3951,14 @@ a {
   color: rgba(15, 23, 42, 0.5);
 }
 
-/* Medical staff: three filters share the header row, so the status one is narrower */
-.mf-staff-filters-wrap,
+/* Medical staff: three filters share the header row, so the status one is narrower.
+   The row never wraps; the search box and dropdowns shrink to fit instead. */
 .mf-roles-filters {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .mf-header-select.mf-header-select--sm {
+  flex-basis: 200px;
   width: 200px;
 }
 
