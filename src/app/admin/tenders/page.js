@@ -24,17 +24,6 @@ const initials = (name = "") =>
     .slice(0, 2)
     .toUpperCase();
 
-const formatDateTime = (iso) =>
-  iso
-    ? new Date(iso).toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "";
-
 export default function TendersPage() {
   const [tenders, setTenders] = useState([]);
   const [hasNext, setHasNext] = useState(false);
@@ -85,12 +74,7 @@ export default function TendersPage() {
   const term = query.trim().toLowerCase();
   const isSearching = term !== "";
   const visibleTenders = tenders.filter((tender) =>
-    [
-      tender.reference_no,
-      tender.title,
-      tender.status?.display_name,
-      formatDateTime(tender.deadline),
-    ].some((value) => String(value ?? "").toLowerCase().includes(term)),
+    [tender.reference_no, tender.title, tender.description].some((value) => String(value ?? "").toLowerCase().includes(term)),
   );
   const firstNumber = (page - 1) * PAGE_SIZE;
 
@@ -193,9 +177,7 @@ export default function TendersPage() {
                 <th>Sr. No.</th>
                 <th>Reference no.</th>
                 <th>Title</th>
-                <th>Items</th>
-                <th>Deadline</th>
-                <th>Status</th>
+                <th>Description</th>
               </tr>
             </thead>
             <tbody>
@@ -204,13 +186,7 @@ export default function TendersPage() {
                   <td className="mf-mc-muted">{firstNumber + index + 1}</td>
                   <td>{tender.reference_no}</td>
                   <td>{tender.title}</td>
-                  <td>{tender.items?.length ?? 0}</td>
-                  <td>{tender.deadline ? formatDateTime(tender.deadline) : "—"}</td>
-                  <td>
-                    <span className={`mf-mc-badge${tender.status?.value === "published" ? " is-active" : ""}`}>
-                      {tender.status?.display_name ?? "—"}
-                    </span>
-                  </td>
+                  <td>{tender.description || "—"}</td>
                 </tr>
               ))}
             </tbody>
