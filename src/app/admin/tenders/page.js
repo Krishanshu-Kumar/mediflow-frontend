@@ -2,9 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { Dropdown } from "react-bootstrap";
-import { FiCheck, FiChevronDown, FiHome, FiPlus, FiSearch } from "react-icons/fi";
+import {
+  FiCalendar,
+  FiCheck,
+  FiChevronDown,
+  FiClock,
+  FiHome,
+  FiPlus,
+  FiSearch,
+  FiUsers,
+} from "react-icons/fi";
 import { FaGavel } from "react-icons/fa";
-import { useTenders } from "@/api/tender/tenderApi";
+import { useSetTenderActivation, useSetTenderStatus, useTenders } from "@/api/tender/tenderApi";
 import { useTenants } from "@/api/tenant/tenantApi";
 import AdminShell from "@/components/AdminShell";
 import Loader from "@/components/Loader";
@@ -15,6 +24,14 @@ import { getBreadcrumbs } from "@/const/navigation";
 
 const PAGE_SIZE = 10;
 
+// Tender status codes from the backend's tender_status master codes.
+const STATUS_OPTIONS = [
+  { code: 4001, value: "draft", label: "Draft", hint: "Not visible to bidders yet" },
+  { code: 4002, value: "published", label: "Published", hint: "Open for bidding" },
+  { code: 4003, value: "closed", label: "Closed", hint: "Bidding has ended" },
+  { code: 4004, value: "cancelled", label: "Cancelled", hint: "Tender withdrawn" },
+];
+
 const initials = (name = "") =>
   name
     .split(" ")
@@ -23,6 +40,38 @@ const initials = (name = "") =>
     .join("")
     .slice(0, 2)
     .toUpperCase();
+
+// Date and time shown as two lines in a schedule cell.
+function Schedule({ iso, icon: Icon, children }) {
+  if (!iso) return <span className="mf-mc-muted">Not set</span>;
+  const date = new Date(iso);
+  return (
+    <div className="mf-tender-when">
+      <span className="mf-tender-when-icon">
+        <Icon size={14} />
+      </span>
+      <div>
+        <div className="mf-tender-when-date">
+          {date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+        </div>
+        <div className="mf-tender-when-time">
+          {date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// "3 days left" / "Overdue" pill for open tenders with a deadline.
+function deadlineHint(tender) {
+  if (!tender.deadline || tender.status?.value !== "published") return null;
+  const ms = new Date(tender.deadline).getTime() - Date.now();
+  if (ms < 0) return { tone: "late", text: "Overdue" };
+  const days = Math.ceil(ms / 86400000);
+  if (days <= 1) return { tone: "soon", text: "Due today" };
+  return { tone: days <= 3 ? "soon" : "ok", text: `${days} days left` };
+}
 
 export default function TendersPage() {
   const [tenders, setTenders] = useState([]);
@@ -36,6 +85,8 @@ export default function TendersPage() {
   const toast = useToast();
   const { call: fetchTenders, loading } = useTenders();
   const { call: fetchTenants } = useTenants();
+  const { call: saveActivation, loading: activationSaving } = useSetTenderActivation();
+  const { call: saveStatus, loading: statusSaving } = useSetTenderStatus();
 
   // Tenant choices for the dropdown: active tenants only.
   useEffect(() => {
@@ -58,6 +109,7 @@ export default function TendersPage() {
       tenantId: selectedTenantId,
       skip: (page - 1) * PAGE_SIZE,
       limit: PAGE_SIZE,
+      activeOnly: false, // include inactive tenders so they can be activated again
     })
       .then(({ items, hasNext: more }) => {
         setTenders(items);
@@ -74,9 +126,36 @@ export default function TendersPage() {
   const term = query.trim().toLowerCase();
   const isSearching = term !== "";
   const visibleTenders = tenders.filter((tender) =>
-    [tender.reference_no, tender.title, tender.description].some((value) => String(value ?? "").toLowerCase().includes(term)),
+    [tender.reference_no, tender.title, tender.description].some((value) =>
+      String(value ?? "").toLowerCase().includes(term),
+    ),
   );
   const firstNumber = (page - 1) * PAGE_SIZE;
+
+  const handleActivationChange = async (tender, isActive) => {
+    try {
+      const updated = await saveActivation(tender.id, isActive);
+      setTenders((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+      toast.success(`${updated.reference_no} is now ${isActive ? "active" : "inactive"}.`, {
+        title: "Tender updated",
+      });
+    } catch (err) {
+      toast.error(err.message, { title: "Couldn't update tender" });
+    }
+  };
+
+  const handleStatusChange = async (tender, statusCode) => {
+    if (Number(statusCode) === tender.status_code) return;
+    try {
+      const updated = await saveStatus(tender.id, Number(statusCode));
+      setTenders((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+      toast.success(`${updated.reference_no} is now ${updated.status?.display_name ?? "updated"}.`, {
+        title: "Status updated",
+      });
+    } catch (err) {
+      toast.error(err.message, { title: "Couldn't update status" });
+    }
+  };
 
   const handleQueryChange = (event) => {
     setQuery(event.target.value);
@@ -90,7 +169,7 @@ export default function TendersPage() {
 
   return (
     <AdminShell title="All Tenders" breadcrumbs={getBreadcrumbs("tenders", "all-tenders")}>
-      <Loader show={loading} />
+      <Loader show={loading || activationSaving || statusSaving} />
       <PageCard
         scrollResetKey={page}
         footer={
@@ -171,24 +250,106 @@ export default function TendersPage() {
         }
       >
         {visibleTenders.length > 0 ? (
-          <table className="mf-mc-table">
+          <table className="mf-mc-table mf-tender-table">
             <thead>
               <tr>
-                <th>Sr. No.</th>
-                <th>Reference no.</th>
-                <th>Title</th>
-                <th>Description</th>
+                <th>#</th>
+                <th>Tender</th>
+                <th>Pre-bid meeting</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Active</th>
               </tr>
             </thead>
             <tbody>
-              {visibleTenders.map((tender, index) => (
-                <tr key={tender.id}>
+              {visibleTenders.map((tender, index) => {
+                const hint = deadlineHint(tender);
+                return (
+                <tr key={tender.id} className={tender.is_active ? undefined : "mf-tender-row--inactive"}>
                   <td className="mf-mc-muted">{firstNumber + index + 1}</td>
-                  <td>{tender.reference_no}</td>
-                  <td>{tender.title}</td>
-                  <td>{tender.description || "—"}</td>
+                  <td>
+                    <span className="mf-tender-ref">{tender.reference_no}</span>
+                    <div className="mf-tender-title">{tender.title}</div>
+                    {tender.description && <div className="mf-tender-desc">{tender.description}</div>}
+                  </td>
+                  <td>
+                    <Schedule iso={tender.pre_bid_meeting_at} icon={FiUsers} />
+                  </td>
+                  <td>
+                    <Schedule iso={tender.deadline} icon={FiCalendar}>
+                      {hint && (
+                        <span className={`mf-tender-hint is-${hint.tone}`}>
+                          <FiClock size={11} />
+                          {hint.text}
+                        </span>
+                      )}
+                    </Schedule>
+                  </td>
+                  <td>
+                    <Dropdown onSelect={(code) => handleStatusChange(tender, code)}>
+                      <Dropdown.Toggle
+                        as="button"
+                        type="button"
+                        className={`mf-mc-badge mf-status-toggle is-${tender.status?.value}`}
+                        disabled={statusSaving}
+                        aria-label={`Change status of ${tender.reference_no}`}
+                        title="Change status"
+                      >
+                        <span className="mf-status-dot" />
+                        {tender.status?.display_name ?? tender.status?.value ?? "—"}
+                        <FiChevronDown size={12} className="mf-status-caret" />
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu
+                        className="mf-status-menu"
+                        popperConfig={{ strategy: "fixed" }}
+                        renderOnMount
+                      >
+                        <div className="mf-status-menu-heading">Change status</div>
+                        {STATUS_OPTIONS.map((option) => {
+                          const isCurrent = option.code === tender.status_code;
+                          return (
+                            <Dropdown.Item
+                              key={option.code}
+                              eventKey={option.code}
+                              active={isCurrent}
+                              className={`mf-status-option is-${option.value}`}
+                            >
+                              <span className="mf-status-option-dot" />
+                              <span className="mf-status-option-text">
+                                <span className="mf-status-option-label">{option.label}</span>
+                                <span className="mf-status-option-hint">{option.hint}</span>
+                              </span>
+                              {isCurrent && <FiCheck size={16} className="mf-status-option-check" />}
+                            </Dropdown.Item>
+                          );
+                        })}
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  </td>
+                  <td>
+                    <label
+                      className={`mf-switch${tender.is_active ? " is-on" : ""}`}
+                      title="Set tender active or inactive"
+                    >
+                      <input
+                        type="checkbox"
+                        role="switch"
+                        className="mf-switch-input"
+                        checked={Boolean(tender.is_active)}
+                        disabled={activationSaving}
+                        onChange={(event) => handleActivationChange(tender, event.target.checked)}
+                        aria-label={`${tender.reference_no} active`}
+                      />
+                      <span className="mf-switch-track" aria-hidden="true">
+                        <span className="mf-switch-thumb">
+                          <FiCheck size={10} strokeWidth={3.5} />
+                        </span>
+                      </span>
+                    </label>
+                  </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         ) : loadError ? (

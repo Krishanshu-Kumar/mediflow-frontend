@@ -3131,6 +3131,223 @@ a {
   color: #15803d;
 }
 
+/* tender status badge colours, keyed by the status value (app/admin/tenders/page.js) */
+.mf-mc-badge.is-draft {
+  background: rgba(100, 116, 139, 0.14);
+  color: #475569;
+}
+
+.mf-mc-badge.is-published {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+.mf-mc-badge.is-closed {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+
+.mf-mc-badge.is-cancelled {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
+
+/* ---------- Tenders page (app/admin/tenders/page.js) ---------- */
+
+.mf-tender-table td {
+  vertical-align: top;
+}
+
+.mf-tender-ref {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 6px;
+  background: rgba(13, 148, 136, 0.1);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #0f766e;
+}
+
+.mf-tender-title {
+  margin-top: 0.3rem;
+  font-weight: 600;
+}
+
+.mf-tender-desc {
+  max-width: 340px;
+  margin-top: 0.1rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  font-size: 0.8rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.mf-tender-when {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.mf-tender-when-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+}
+
+.mf-tender-when-date {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mf-tender-when-time {
+  font-size: 0.78rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.mf-tender-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.mf-tender-hint.is-ok { background: rgba(22, 163, 74, 0.12); color: #15803d; }
+.mf-tender-hint.is-soon { background: rgba(217, 119, 6, 0.14); color: #b45309; }
+.mf-tender-hint.is-late { background: rgba(220, 38, 38, 0.12); color: #b91c1c; }
+
+.mf-tender-row--inactive td {
+  opacity: 0.55;
+}
+
+.mf-tender-row--inactive td:last-child {
+  opacity: 1;
+}
+
+/* status badge that opens a menu to change the status */
+.mf-status-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 0;
+  cursor: pointer;
+}
+
+.mf-status-toggle::after {
+  display: none;
+}
+
+.mf-status-toggle {
+  padding: 0.25rem 0.65rem;
+  transition: box-shadow 0.15s, filter 0.15s;
+}
+
+.mf-status-toggle:hover:not(:disabled),
+.mf-status-toggle.show {
+  filter: brightness(0.96);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.mf-status-dot,
+.mf-status-option-dot {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.mf-status-caret {
+  transition: transform 0.15s;
+}
+
+.mf-status-toggle.show .mf-status-caret {
+  transform: rotate(180deg);
+}
+
+/* dropdown menu */
+.mf-status-menu {
+  min-width: 235px;
+  padding: 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+}
+
+.mf-status-menu-heading {
+  padding: 0.35rem 0.6rem 0.45rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.mf-status-option {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  color: inherit;
+}
+
+.mf-status-option:hover,
+.mf-status-option:focus {
+  background: rgba(0, 0, 0, 0.05);
+  color: inherit;
+}
+
+.mf-status-option.active,
+.mf-status-option:active {
+  background: rgba(13, 148, 136, 0.1);
+  color: inherit;
+}
+
+.mf-status-option-dot {
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.mf-status-option.is-draft .mf-status-option-dot { color: #64748b; }
+.mf-status-option.is-published .mf-status-option-dot { color: #16a34a; }
+.mf-status-option.is-closed .mf-status-option-dot { color: #d97706; }
+.mf-status-option.is-cancelled .mf-status-option-dot { color: #dc2626; }
+
+.mf-status-option-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  line-height: 1.25;
+}
+
+.mf-status-option-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.mf-status-option-hint {
+  font-size: 0.74rem;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.mf-status-option-check {
+  color: #0f766e;
+}
+
 /* permission scope badge */
 .mf-scope-badge {
   display: inline-flex;
