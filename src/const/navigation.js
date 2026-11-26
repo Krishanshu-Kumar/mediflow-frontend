@@ -1,5 +1,5 @@
 import { FaGavel } from "react-icons/fa";
-import { FiCalendar, FiFileText, FiKey, FiLayers, FiList, FiSettings, FiShield, FiUserPlus, FiUsers } from "react-icons/fi";
+import { FiCalendar, FiFileText, FiKey, FiLayers, FiList, FiPackage, FiSettings, FiShield, FiUserPlus, FiUsers } from "react-icons/fi";
 
 // Each item: { key, label, icon, children?: [{ key, label, icon, color, href? }] }
 export const NAV_SECTIONS = [
@@ -29,6 +29,7 @@ export const NAV_SECTIONS = [
     icon: FaGavel,
     children: [
       { key: "all-tenders", label: "All Tenders", icon: FiFileText, color: "#9333ea", href: "/admin/tenders" },
+      { key: "tender-items", label: "Items", icon: FiPackage, color: "#ea580c", href: "/admin/tenders/items" },
     ],
   },
 ];
