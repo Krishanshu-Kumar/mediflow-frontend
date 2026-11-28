@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Offcanvas } from "react-bootstrap";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { FiAlertCircle, FiHome, FiInfo, FiLayers, FiLink, FiLock, FiX } from "react-icons/fi";
+import { FiAlertCircle, FiChevronDown, FiChevronUp, FiHome, FiInfo, FiLayers, FiLink, FiLock, FiX } from "react-icons/fi";
 import SelectField from "@/components/SelectField";
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -43,6 +43,14 @@ const slugify = (text) =>
 export function Field({ id, name, label, icon, formik, onChange, hint, maxLength, required, type = "text", min }) {
   const showError = (formik.touched[name] || formik.submitCount > 0) && formik.errors[name];
 
+  // Custom up/down buttons for number fields (the browser's own spinner can't be aligned).
+  const stepBy = (delta) => {
+    const current = Number(formik.values[name]) || 0;
+    const next = Math.max(min ?? -Infinity, Math.round((current + delta) * 1000) / 1000);
+    formik.setFieldValue(name, String(next));
+    formik.setFieldTouched(name, true, false);
+  };
+
   return (
     <div className="mf-field-group">
       <div className={`mf-field${showError ? " is-invalid" : ""}`}>
@@ -67,6 +75,16 @@ export function Field({ id, name, label, icon, formik, onChange, hint, maxLength
             {required && <span className="mf-required"> *</span>}
           </label>
         </div>
+        {type === "number" && (
+          <span className="mf-field-stepper">
+            <button type="button" tabIndex={-1} aria-label={`Increase ${label}`} onClick={() => stepBy(1)}>
+              <FiChevronUp size={14} strokeWidth={2.6} />
+            </button>
+            <button type="button" tabIndex={-1} aria-label={`Decrease ${label}`} onClick={() => stepBy(-1)}>
+              <FiChevronDown size={14} strokeWidth={2.6} />
+            </button>
+          </span>
+        )}
         {showError && (
           <span className="mf-field-alert">
             <FiAlertCircle size={19} />

@@ -1886,6 +1886,70 @@ a {
   box-shadow: 0 8px 18px -6px rgba(37, 99, 235, 0.6), 0 0 0 3px rgba(37, 99, 235, 0.3);
 }
 
+/* disabled primary button: flat grey, no shadow or hover colour shift */
+.mf-page-card-btn--add:disabled,
+.mf-page-card-btn--add:disabled:hover,
+.mf-page-card-btn--add:disabled:active {
+  background: #cbd5e1;
+  color: #64748b;
+  box-shadow: none;
+  filter: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.mf-page-card-btn--add:disabled::before {
+  display: none;
+}
+
+/* rich hint popover (icon + title + text), e.g. why a button is disabled */
+.mf-hint-popover {
+  max-width: 280px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 16px 32px -12px rgba(15, 23, 42, 0.28), 0 4px 10px -4px rgba(15, 23, 42, 0.12);
+}
+
+.mf-hint-popover .popover-body {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  padding: 0.8rem 0.95rem;
+}
+
+.mf-hint-popover-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.mf-hint-popover-icon.is-warn {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.mf-hint-popover-icon.is-info {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.mf-hint-popover-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.mf-hint-popover-text {
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #475569;
+}
+
 .mf-page-card-body {
   flex: 1;
   min-height: 0;
@@ -2619,6 +2683,57 @@ a {
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+/* number fields: hide the native spinner, use the stacked stepper buttons instead */
+.mf-field-input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.mf-field-input[type="number"]::-webkit-inner-spin-button,
+.mf-field-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.mf-field-stepper {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 3px;
+  align-self: center;
+  margin-right: 0.6rem;
+}
+
+.mf-field-stepper button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--mf-accent);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+}
+
+.mf-field-stepper button:hover {
+  background: linear-gradient(135deg, #3b82f6, var(--mf-accent));
+  color: #fff;
+  box-shadow: 0 3px 8px -3px rgba(37, 99, 235, 0.6);
+}
+
+.mf-field-stepper button:active {
+  transform: scale(0.92);
+}
+
+.mf-field-stepper button:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.4);
+  outline-offset: 1px;
 }
 
 .mf-tenant-form .mf-field-alert {
